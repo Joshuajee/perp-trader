@@ -1,5 +1,9 @@
 import { WagmiConfig, createConfig } from "wagmi";
 import { ConnectKitProvider, ConnectKitButton, getDefaultConfig } from "connectkit";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import Layout from "@pages/Layout";
+import Home from "@pages/Home";
+import NoPage from "@pages/NoPage";
 
 const config = createConfig(
   getDefaultConfig({
@@ -21,9 +25,15 @@ const App = () => {
   return (
     <WagmiConfig config={config}>
       <ConnectKitProvider>
-        /* Your App */
-        <ConnectKitButton />
-        <div className="bg-red-400"></div>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Layout />}>
+              <Route index element={<Home />} />
+              {/* <Route path="blogs" element={<Blogs />} /> */}  ``44
+              <Route path="*" element={<NoPage />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
       </ConnectKitProvider>
     </WagmiConfig>
   );
