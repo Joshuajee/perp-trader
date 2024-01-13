@@ -1,5 +1,5 @@
 import { WagmiConfig, createConfig } from "wagmi";
-import { ConnectKitProvider, ConnectKitButton, getDefaultConfig } from "connectkit";
+import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Layout from "@pages/Layout";
 import Home from "@pages/Home";
