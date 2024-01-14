@@ -17,8 +17,7 @@ contract PerpTrades is ERC4626, Ownable {
 
     struct PositionStruct {
         address trader;
-        address baseCurrency;
-        address quoteCurrency;
+        PairStruct pair;
         uint size;
         uint value;
         bool isLong;
@@ -40,7 +39,7 @@ contract PerpTrades is ERC4626, Ownable {
 
     using SafeERC20 for IERC20;
 
-    uint constant DECIMAL = 10^38;
+    uint constant DECIMAL = 10**38;
 
     uint constant public MAX_UTILIZATION_PERCENTAGE = 50;
 
@@ -63,8 +62,16 @@ contract PerpTrades is ERC4626, Ownable {
 
     // store user deposits for a given liquidityProvider
     mapping(address => uint) public myDeposits;
+
+    // store user deposits for a given trader
     mapping(address => uint) public myCollateral;
 
+    // store positionSize for a given trader
+    mapping(address => uint) public myPositionSize;
+
+
+    mapping(bytes32 => uint) public openLongInterestInGho;
+    mapping(bytes32 => uint) public openShortInterestInGho;
 
     mapping(bytes32 => uint) public openLongInterestIntokens;
     mapping(bytes32 => uint) public openShortInterestIntokens;
@@ -75,22 +82,20 @@ contract PerpTrades is ERC4626, Ownable {
     // mapping tokens to price feeds
     mapping(address => AggregatorV3Interface) public priceFeeds;
 
-
     uint [] public positionIds;
     //store user open positons in an array
-    mapping(address => uint[100]) public myPositionIds;
+    mapping(address => uint[]) public myPositionIds;
 
-
-    bytes32 [] public supportedPairArray;
+    PairStruct [] public supportedPairArray;
     mapping(bytes32 => bool) public supportedPair;
 
-    
 
-    uint8 constant public MAX_LEVERAGE = 20;
-    uint constant public LOT_SIZE = 0.01 ether;
 
     // Admin Variables
     uint8 public maximumNumberOfPairs = 100;
+    uint8 public interestRate = 5;
+    uint8 public liquidationFeePercent = 5;
+    uint16 public maxLeverage = 500;
 
 
 
@@ -135,20 +140,45 @@ contract PerpTrades is ERC4626, Ownable {
 
 
 
-    function openPosition(PairStruct memory pair, uint _size, bool _isLong) external onlySupportedPair(pair) {
+    function openPosition(PairStruct memory pair, uint _size, uint _collateral, bool _isLong) external onlySupportedPair(pair) {
         uint amount = getPairPrice(pair) * _size;
-        //if (!isBelowLeverage(_collateralDeposit, _size)) revert("Deposit is below leverage");
+        
         positions[++positionId] = PositionStruct({
             trader: msg.sender,
-            baseCurrency: pair.baseCurrency,
-            quoteCurrency: pair.quoteCurrency,
+            pair: pair,
             size: _size,
             value: amount,
             isLong: _isLong,
             isOpen: true
         });
         _updatePositions(pair, _size, amount, _isLong);
+        myPositionIds[msg.sender].push(positionId); 
+        if (_collateral > 0) addCollateral(_collateral);
         emit PositionOpened(positionId, pair, msg.sender, _size, true);
+    }
+
+
+    function closePosition(uint _positionId) public {
+        
+        PositionStruct memory position = positions[_positionId];
+        int pnl = positionPnl(_positionId);
+
+        if (pnl > 0) {
+            gho.safeTransfer(address(collateralBank), uint(pnl));
+            myCollateral[position.trader] += uint(pnl); 
+        } else {
+            uint loss = uint(pnl);
+            if (loss > myCollateral[position.trader]) {
+                collateralBank.withdraw(address(this), myCollateral[position.trader]);
+                myCollateral[position.trader] = 0;
+            } else {
+                collateralBank.withdraw(address(this), loss);
+                myCollateral[position.trader] -= loss;
+            }
+        }
+
+        _reducePositions(position.pair, position.size, position.value, position.isLong);
+        
     }
 
 
@@ -156,10 +186,9 @@ contract PerpTrades is ERC4626, Ownable {
      *                          Public View Functions                       *
      ************************************************************************/
 
-    function getPairKey(PairStruct memory pair) public returns(bytes32) {
+    function getPairKey(PairStruct memory pair) public pure returns(bytes32) {
         return keccak256(abi.encode(pair));
     }
-
 
     function getCollateralBankAddress() public view returns (address) {
         return address(collateralBank);
@@ -178,7 +207,60 @@ contract PerpTrades is ERC4626, Ownable {
     }
 
     function totalPnL() public view returns(int pnl) {
-        
+        for (uint i = 0; i < supportedPairArray.length; i++) {
+
+            PairStruct memory pair = supportedPairArray[i];
+
+            bytes32 pairKey = getPairKey(pair);
+            
+            uint currentPrice = getPairPrice(pair);
+
+            int longPnl = int(int(openLongInterestIntokens[pairKey] / currentPrice) - int(openLongInterestInGho[pairKey]));
+
+            int shortPnl = int(int(openShortInterestInGho[pairKey]) - int(openShortInterestIntokens[pairKey] / currentPrice));
+
+            pnl += (longPnl + shortPnl);
+
+        }
+    }
+
+    function traderPnL(address trader) public view returns(int pnl) {
+        uint[] memory _myPositionIds = myPositionIds[trader]; 
+        for (uint i = 0; i < _myPositionIds.length; i++) {
+
+            PositionStruct memory position = positions[_myPositionIds[i]];
+
+            uint currentPrice = getPairPrice(position.pair);
+
+            if (position.isLong) {
+                pnl += int(position.value / currentPrice) - int(position.size);
+            } else {
+                pnl += int(position.size) - int(position.value / currentPrice);
+            }
+
+        }
+
+    }
+
+
+    function positionPnl(uint _positionId) public view returns(int pnl) {
+
+        PositionStruct memory position = positions[_positionId];
+
+        uint currentPrice = getPairPrice(position.pair);
+
+        if (position.isLong) {
+            pnl += int(position.value / currentPrice) - int(position.size);
+        } else {
+            pnl += int(position.size) - int(position.value / currentPrice);
+        }
+
+    }
+
+
+    function getTraderLeverage(address trader) public view returns(uint leverage) {
+        uint traderPositionValue = uint(int(myCollateral[trader]) + traderPnL(trader));
+        leverage = myPositionSize[trader]  / traderPositionValue;
     }
 
 
@@ -190,11 +272,28 @@ contract PerpTrades is ERC4626, Ownable {
         bytes32 pairKey = getPairKey(_pair);
         if (_isLong) {
             totalOpenLongInterest += _size;    
+            openLongInterestInGho[pairKey] += _size;    
             openLongInterestIntokens[pairKey] += _amount;    
         }   else {
             totalOpenShortInterest += _size;
+            openShortInterestInGho[pairKey] += _size;
             openShortInterestIntokens[pairKey] += _amount;  
         }
+        myPositionSize[msg.sender] += _size;
+    }
+
+    function _reducePositions(PairStruct memory _pair, uint _size, uint _amount, bool _isLong) internal {
+        bytes32 pairKey = getPairKey(_pair);
+        if (_isLong) {
+            totalOpenLongInterest -= _size;    
+            openLongInterestInGho[pairKey] -= _size;    
+            openLongInterestIntokens[pairKey] -= _amount;    
+        }   else {
+            totalOpenShortInterest -= _size;
+            openShortInterestInGho[pairKey] -= _size;
+            openShortInterestIntokens[pairKey] -= _amount;  
+        }
+        myPositionSize[msg.sender] -= _size;
     }
 
 
@@ -211,7 +310,7 @@ contract PerpTrades is ERC4626, Ownable {
         if (supportedPair[pairKey]) revert PairAlreadyExist();
         if (supportedPairArray.length > maximumNumberOfPairs - 1) revert MaximumNumberOfPairReached();
         supportedPair[pairKey] = true;
-        supportedPairArray.push(pairKey);
+        supportedPairArray.push(pair);
     }
 
     /************************************************************************

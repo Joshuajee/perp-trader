@@ -1,23 +1,28 @@
 import { viem } from "hardhat"
+import { parseEther } from "viem";
 
+export const DECIMAL = 10n ** 38n
 
 export async function deployPriceAggregator() {
 
-    const DECIMALS = 18
     const INITIAL_PRICE = 200000000000000000000n
 
-    const ghoPriceFeeds = await viem.deployContract("MockV3Aggregator", [DECIMALS, INITIAL_PRICE])
+    const ghoDecimal = 8;
+    const ghoInitailPrice = INITIAL_PRICE
 
-    const btcPriceFeeds = await viem.deployContract("MockV3Aggregator", [DECIMALS, INITIAL_PRICE])
+    const btcDecimal = 8;
+    const btcInitailPrice = INITIAL_PRICE
 
-    const ethPriceFeeds = await viem.deployContract("MockV3Aggregator", [DECIMALS, INITIAL_PRICE])
+    const ethDecimal = 8;
+    const ethInitailPrice = INITIAL_PRICE
 
-    // const btcPriceFeeds = await viem.deployContract("MockV3Aggregator", [DECIMALS, INITIAL_PRICE])
+    const ghoPriceFeeds = await viem.deployContract("MockV3Aggregator", [ghoDecimal, ghoInitailPrice])
 
-    // const ethPriceFeeds = await viem.deployContract("MockV3Aggregator", [DECIMALS, INITIAL_PRICE])
+    const btcPriceFeeds = await viem.deployContract("MockV3Aggregator", [btcDecimal, btcInitailPrice])
 
+    const ethPriceFeeds = await viem.deployContract("MockV3Aggregator", [ethDecimal, ethInitailPrice])
 
-    return { ghoPriceFeeds, btcPriceFeeds, ethPriceFeeds }
+    return { ghoPriceFeeds, btcPriceFeeds, ethPriceFeeds, ghoDecimal, ghoInitailPrice, btcDecimal, btcInitailPrice, ethDecimal, ethInitailPrice }
 
 }
 
