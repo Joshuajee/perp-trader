@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Layout from "@pages/Layout";
 import Home from "@pages/Home";
 import NoPage from "@pages/NoPage";
+import Vault from "@pages/Vault";
 
 const config = createConfig(
   getDefaultConfig({
@@ -29,7 +30,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={<Home />} />
-              {/* <Route path="blogs" element={<Blogs />} /> */}  ``44
+              <Route path="/vault" element={<Vault />} />
               <Route path="*" element={<NoPage />} />
             </Route>
           </Routes>
