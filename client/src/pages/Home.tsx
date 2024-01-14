@@ -1,10 +1,11 @@
 import { GoGraph } from "react-icons/go";
 import { BsGraphDown } from "react-icons/bs";
 import { MdOutlineSwapHoriz } from "react-icons/md";
-import { PriceSummary } from "@components/Home";
+import { Chart, PriceSummary } from "@components/Home";
 import { FaChevronDown } from "react-icons/fa";
 import { TbArrowBigUpLinesFilled } from "react-icons/tb";
 import { TbArrowBigDownLinesFilled } from "react-icons/tb";
+import TradingViewWidget from "@components/Home/TradingViewWidget";
 
 
 function Home() {
@@ -13,7 +14,10 @@ function Home() {
             <div className="flex mt-10 gap-10">
                 <div className="w-[70%] h-fit flex flex-col gap-8 ">
                     <PriceSummary />
-                    <div className="bg-primary_4 h-[60vh] rounded-md">Chart</div>
+                    <div className="bg-primary_4 h-[60vh] rounded-md p-5 overflow-hidden">
+                        {/* <Chart /> */}
+                        <TradingViewWidget />
+                    </div>
                     <div className="bg-primary_4 rounded-md py-3 h-[100vh] overflow-auto">
                         <div className="flex items-center border-b border-primary_2 h-10">
                             <div className="w-[16.6%]  h-full font-semibold text-sm flex items-center justify-center">Pair</div>
