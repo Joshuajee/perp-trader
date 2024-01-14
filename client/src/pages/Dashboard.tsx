@@ -1,20 +1,20 @@
 import { GoGraph } from "react-icons/go";
 import { BsGraphDown } from "react-icons/bs";
 import { MdOutlineSwapHoriz } from "react-icons/md";
-import { Chart, PriceSummary } from "@components/Home";
+import { Chart, PriceSummary } from "@components/Dashboard";
 import { FaChevronDown } from "react-icons/fa";
 import { TbArrowBigUpLinesFilled } from "react-icons/tb";
 import { TbArrowBigDownLinesFilled } from "react-icons/tb";
-import TradingViewWidget from "@components/Home/TradingViewWidget";
+import TradingViewWidget from "@components/Dashboard/TradingViewWidget";
 
 
-function Home() {
+function Dashboard() {
     return (
         <>
-            <div className="flex mt-10 gap-10">
+            <div className="flex mt-10 gap-10 px-10">
                 <div className="w-[70%] h-fit flex flex-col gap-8 ">
                     <PriceSummary />
-                    <div className="bg-primary_4 h-[60vh] rounded-md p-5 overflow-hidden">
+                    <div className="bg-primary_4 h-[60vh] rounded-md p-1 overflow-hidden">
                         {/* <Chart /> */}
                         <TradingViewWidget />
                     </div>
@@ -166,4 +166,4 @@ function Home() {
     )
 }
 
-export default Home
+export default Dashboard

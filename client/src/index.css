@@ -17,9 +17,7 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-body{
-  padding: 10px 20px 10px 20px;
-}
+
 
 .custom-gutter-horizontal {
   width: 0.1rem;

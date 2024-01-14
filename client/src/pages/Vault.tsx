@@ -3,7 +3,7 @@ import { TbTransferIn, TbTransferOut } from "react-icons/tb";
 
 export default function Vault() {
     return (
-        <div className='flex flex-col justify-center gap-10'>
+        <div className='flex flex-col justify-center gap-8 mt-4'>
             <div className='w-[90%] max-w-[500px] h-24 rounded-xl bg-primary_4 m-auto flex  items-center'>
                 <div className='w-[25%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Total Value</p>

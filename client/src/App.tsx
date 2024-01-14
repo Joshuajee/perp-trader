@@ -2,9 +2,10 @@ import { WagmiConfig, createConfig } from "wagmi";
 import { ConnectKitProvider, getDefaultConfig } from "connectkit";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Layout from "@pages/Layout";
-import Home from "@pages/Home";
 import NoPage from "@pages/NoPage";
 import Vault from "@pages/Vault";
+import Dashboard from "@pages/Dashboard";
+import Trades from "@pages/Trades";
 
 const config = createConfig(
   getDefaultConfig({
@@ -29,8 +30,9 @@ const App = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Layout />}>
-              <Route index element={<Home />} />
+              <Route index element={<Dashboard />} />
               <Route path="/vault" element={<Vault />} />
+              <Route path="/trades" element={<Trades />} />
               <Route path="*" element={<NoPage />} />
             </Route>
           </Routes>
