@@ -17,5 +17,9 @@ export const depositLiquidity = async(_gho: Address, _perpTrader: Address,  amou
 
     await perpTrader.write.deposit([amount])
 
+}
 
+
+const calculatePrice = async() => {
+    
 }

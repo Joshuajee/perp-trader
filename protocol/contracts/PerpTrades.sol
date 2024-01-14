@@ -20,12 +20,14 @@ contract PerpTrades is ERC4626, Ownable {
         address baseCurrency;
         address quoteCurrency;
         uint size;
-        uint baseCurrencyValue;
-        uint quoteCurrencyValue;
         uint value;
         bool isLong;
         bool isOpen;
     }
+
+    error PairAlreadyExist();
+    error PairNotSupported(PairStruct pair);
+    error MaximumNumberOfPairReached();
 
     event DepositLiquidity(address indexed liquidityProvider, uint assets);
     event DepositCollateral(address indexed liquidityProvider, uint assets);
@@ -78,11 +80,17 @@ contract PerpTrades is ERC4626, Ownable {
     //store user open positons in an array
     mapping(address => uint[100]) public myPositionIds;
 
-    
 
+    bytes32 [] public supportedPairArray;
+    mapping(bytes32 => bool) public supportedPair;
+
+    
 
     uint8 constant public MAX_LEVERAGE = 20;
     uint constant public LOT_SIZE = 0.01 ether;
+
+    // Admin Variables
+    uint8 public maximumNumberOfPairs = 100;
 
 
 
@@ -125,7 +133,35 @@ contract PerpTrades is ERC4626, Ownable {
         emit DepositCollateral(trader, assets);
     }
 
-    function getCollateralBankAddress() external view returns (address) {
+
+
+    function openPosition(PairStruct memory pair, uint _size, bool _isLong) external onlySupportedPair(pair) {
+        uint amount = getPairPrice(pair) * _size;
+        //if (!isBelowLeverage(_collateralDeposit, _size)) revert("Deposit is below leverage");
+        positions[++positionId] = PositionStruct({
+            trader: msg.sender,
+            baseCurrency: pair.baseCurrency,
+            quoteCurrency: pair.quoteCurrency,
+            size: _size,
+            value: amount,
+            isLong: _isLong,
+            isOpen: true
+        });
+        _updatePositions(pair, _size, amount, _isLong);
+        emit PositionOpened(positionId, pair, msg.sender, _size, true);
+    }
+
+
+    /************************************************************************
+     *                          Public View Functions                       *
+     ************************************************************************/
+
+    function getPairKey(PairStruct memory pair) public returns(bytes32) {
+        return keccak256(abi.encode(pair));
+    }
+
+
+    function getCollateralBankAddress() public view returns (address) {
         return address(collateralBank);
     }
 
@@ -141,29 +177,17 @@ contract PerpTrades is ERC4626, Ownable {
         return uint(assetPrice * int(DECIMAL) / ghoPrice);
     }
 
-
-    function openPosition(PairStruct memory pair, uint _size, bool _isLong) external {
-        uint priceBaseCurrency = convertPriceToGho(pair.baseCurrency);
-        uint priceQuoteCurrency = convertPriceToGho(pair.quoteCurrency);
-        uint amount = getPairPrice(pair) * _size;
-        //if (!isBelowLeverage(_collateralDeposit, _size)) revert("Deposit is below leverage");
-        positions[++positionId] = PositionStruct({
-            trader: msg.sender,
-            baseCurrency: pair.baseCurrency,
-            quoteCurrency: pair.quoteCurrency,
-            size: _size,
-            value: amount,
-            baseCurrencyValue: priceBaseCurrency * _size,
-            quoteCurrencyValue: priceQuoteCurrency * _size,
-            isLong: _isLong,
-            isOpen: true
-        });
-        _updatePositions(pair, _size, amount, _isLong);
-        emit PositionOpened(positionId, pair, msg.sender, _size, true);
+    function totalPnL() public view returns(int pnl) {
+        
     }
 
+
+    /************************************************************************
+     *                          Internal Functions                          *
+     ************************************************************************/    
+
     function _updatePositions(PairStruct memory _pair, uint _size, uint _amount, bool _isLong) internal {
-        bytes32 pairKey = _getPairKey(_pair);
+        bytes32 pairKey = getPairKey(_pair);
         if (_isLong) {
             totalOpenLongInterest += _size;    
             openLongInterestIntokens[pairKey] += _amount;    
@@ -174,11 +198,31 @@ contract PerpTrades is ERC4626, Ownable {
     }
 
 
-    function _getPairKey(PairStruct memory pair) private returns(bytes32) {
-        return keccak256(abi.encode(pair));
+    /************************************************************************
+     *                          Admin Only Functions                        *
+     ************************************************************************/
+
+    function addPriceFeed(address _token, address _priceFeeds) external onlyOwner {
+        priceFeeds[_token] = AggregatorV3Interface(_priceFeeds);
     }
 
+    function addPair(PairStruct memory pair) external onlyOwner {
+        bytes32 pairKey = getPairKey(pair);
+        if (supportedPair[pairKey]) revert PairAlreadyExist();
+        if (supportedPairArray.length > maximumNumberOfPairs - 1) revert MaximumNumberOfPairReached();
+        supportedPair[pairKey] = true;
+        supportedPairArray.push(pairKey);
+    }
 
+    /************************************************************************
+     *                               Modifiers                              *
+     ************************************************************************/
+
+    modifier onlySupportedPair(PairStruct memory pair) {
+        bytes32 pairKey = getPairKey(pair);
+        if (!supportedPair[pairKey]) revert PairNotSupported(pair);
+        _;
+    }
 
 
 }

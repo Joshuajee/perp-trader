@@ -3,8 +3,8 @@ import { viem } from "hardhat"
 
 export async function deployPriceAggregator() {
 
-    const DECIMALS = "18"
-    const INITIAL_PRICE = "200000000000000000000"
+    const DECIMALS = 18
+    const INITIAL_PRICE = 200000000000000000000n
 
     const ghoPriceFeeds = await viem.deployContract("MockV3Aggregator", [DECIMALS, INITIAL_PRICE])
 
@@ -31,7 +31,5 @@ export async function deployTokens() {
 
     const eth = await viem.deployContract("MockERC20", ["eth", "eth"])
 
-    
     return { gho, btc, eth }
-
 }

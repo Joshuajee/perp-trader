@@ -16,12 +16,15 @@ describe("PerpTrader", function () {
 
     const [user1, user2] = await viem.getWalletClients();
 
-
     const tokens  = await deployTokens()
 
-    const { ghoPriceFeeds } = await deployPriceAggregator()
+    const { ghoPriceFeeds, btcPriceFeeds, ethPriceFeeds } = await deployPriceAggregator()
 
     const { perpTrader } = await deploy(tokens.gho.address, ghoPriceFeeds.address)
+
+    await perpTrader.write.addPriceFeed([tokens.btc.address, btcPriceFeeds.address])
+
+    await perpTrader.write.addPriceFeed([tokens.eth.address, ethPriceFeeds.address])
     
     return { perpTrader, user1, user2, ghoPriceFeeds, ...tokens }
 
@@ -33,6 +36,13 @@ describe("PerpTrader", function () {
     const deploy = await deployTest()
 
     await depositLiquidity(deploy.gho.address, deploy.perpTrader.address, amount)
+
+    await deploy.perpTrader.write.addPair([
+      {
+        baseCurrency: deploy.btc.address, 
+        quoteCurrency: deploy.eth.address
+      }]
+    )
     
     return { ...deploy }
 
@@ -140,19 +150,104 @@ describe("PerpTrader", function () {
 
   describe("Open Postion", function () {
 
-    it("Should be able to open Position", async() => {
+    it("Should be able to open Position long position", async() => {
 
-      const { perpTrader, btc, eth } = await loadFixture(deployAndDepositTest)
+      const { perpTrader, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
 
-      // await perpTrader.write.openPosition([
-      //   [btc.address, eth.address],
-      //   100n,
-      //   true
-      // ])
+      const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
 
+      await perpTrader.write.openPosition([pair,100n,true])
+
+      const position = await perpTrader.read.positions([1n])
+
+      const pairKey = await perpTrader.read.getPairKey([pair])
+
+      const price = 4400n
+
+      expect(position).deep.be.equal([
+        checksumAddress(user1.account.address),
+        checksumAddress(btc.address),
+        checksumAddress(eth.address),
+        100n,
+        price,
+        true,
+        true
+      ])
+
+      expect(await perpTrader.read.totalOpenLongInterest()).to.be.equal(100n)
+      expect(await perpTrader.read.totalOpenShortInterest()).to.be.equal(0n)
+
+      expect(await perpTrader.read.openLongInterestIntokens([pairKey])).to.be.equal(price)
+      expect(await perpTrader.read.openShortInterestIntokens([pairKey])).to.be.equal(0n)
 
     })
 
+
+    it("Should be able to open Position short position", async() => {
+
+      const { perpTrader, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
+
+      const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
+
+      await perpTrader.write.openPosition([pair,100n,false])
+
+      const position = await perpTrader.read.positions([1n])
+
+      const pairKey = await perpTrader.read.getPairKey([pair])
+
+      const price = 4400n
+
+      expect(position).deep.be.equal([
+        checksumAddress(user1.account.address),
+        checksumAddress(btc.address),
+        checksumAddress(eth.address),
+        100n,
+        price,
+        false,
+        true
+      ])
+
+      expect(await perpTrader.read.totalOpenLongInterest()).to.be.equal(0n)
+      expect(await perpTrader.read.totalOpenShortInterest()).to.be.equal(100n)
+      
+      expect(await perpTrader.read.openLongInterestIntokens([pairKey])).to.be.equal(0n)
+      expect(await perpTrader.read.openShortInterestIntokens([pairKey])).to.be.equal(price)
+
+    })
+
+
+  })
+
+
+  describe("Admin Functions", function () {
+
+    it("Should be able add Pair", async() => {
+
+      const { perpTrader, btc, eth } = await loadFixture(deployTest)
+
+      const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
+
+      const pairKey = await perpTrader.read.getPairKey([pair])
+
+      await perpTrader.write.addPair([pair])
+
+      expect(await perpTrader.read.supportedPairArray([0n])).to.be.equal(pairKey)
+
+      expect(await perpTrader.read.supportedPair([pairKey])).to.be.true
+
+    })
+
+    // it("Should not be able to add pair, if call is not admin", async() => {
+
+    //   const { perpTrader, btc, eth } = await loadFixture(deployTest)
+
+    //   const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
+
+    //   const pairKey = await perpTrader.read.getPairKey([pair])
+
+    //   await perpTrader.simulate().addPair([pair])
+
+    // })
 
   })
   
