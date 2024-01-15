@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/ERC4626.sol";
 import "@chainlink/contracts/src/v0.8/interfaces/AggregatorV3Interface.sol";
 import "./CollateralBank.sol";
+import "hardhat/console.sol";
 
 contract PerpTrades is ERC4626, Ownable {
 
@@ -32,7 +33,7 @@ contract PerpTrades is ERC4626, Ownable {
     event DepositCollateral(address indexed liquidityProvider, uint assets);
     event WithdrawLiquidity(address indexed trader, uint assets);
     event PositionOpened(uint indexed positionId, PairStruct indexed pair, address indexed trader, uint256 size, bool isLong);
-    event PositionClosed(address indexed trader, uint256 size);
+    event PositionClosed(uint indexed positionId, PairStruct indexed pair, address indexed trader, uint256 size);
     event PositionSizeIncrease(uint indexed id, uint inc);
     event PositionCollateralIncreased(uint indexed id, uint inc);
     event PositionCollateralDecreased(uint indexed id, uint desc);
@@ -81,8 +82,7 @@ contract PerpTrades is ERC4626, Ownable {
 
     // mapping tokens to price feeds
     mapping(address => AggregatorV3Interface) public priceFeeds;
-
-    uint [] public positionIds;
+    
     //store user open positons in an array
     mapping(address => uint[]) public myPositionIds;
 
@@ -164,20 +164,38 @@ contract PerpTrades is ERC4626, Ownable {
         int pnl = positionPnl(_positionId);
 
         if (pnl > 0) {
-            gho.safeTransfer(address(collateralBank), uint(pnl));
-            myCollateral[position.trader] += uint(pnl); 
+            uint profit = uint(pnl);
+            gho.safeTransfer(address(collateralBank), profit);
+            myCollateral[position.trader] += profit; 
+            collaterals += profit;
         } else {
             uint loss = uint(pnl);
             if (loss > myCollateral[position.trader]) {
                 collateralBank.withdraw(address(this), myCollateral[position.trader]);
+                collaterals -= myCollateral[position.trader];
                 myCollateral[position.trader] = 0;
             } else {
                 collateralBank.withdraw(address(this), loss);
                 myCollateral[position.trader] -= loss;
+                collaterals -= loss;
             }
         }
 
         _reducePositions(position.pair, position.size, position.value, position.isLong);
+
+        uint [] memory positionIds = myPositionIds[position.trader];
+
+        for (uint i = 0; i < positionIds.length; ++i) {
+            if (positionIds[i] == positionId) {
+                myPositionIds[position.trader][i] = positionIds[positionIds.length - 1];
+                myPositionIds[position.trader].pop();
+                break;
+            }
+        }
+
+
+
+        emit PositionClosed(positionId, position.pair, position.trader, position.size);
         
     }
 
@@ -259,8 +277,11 @@ contract PerpTrades is ERC4626, Ownable {
 
 
     function getTraderLeverage(address trader) public view returns(uint leverage) {
-        uint traderPositionValue = uint(int(myCollateral[trader]) + traderPnL(trader));
-        leverage = myPositionSize[trader]  / traderPositionValue;
+        int traderPositionValue = int(myCollateral[trader]) + traderPnL(trader);
+        console.logInt(traderPositionValue);
+        // set leverage to 2x max leverage when user collateral is less than the loses
+        if (traderPositionValue < 1) return maxLeverage * 2;
+        leverage = myPositionSize[trader]  / uint(traderPositionValue);
     }
 
 

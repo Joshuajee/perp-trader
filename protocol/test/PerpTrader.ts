@@ -288,6 +288,31 @@ describe("PerpTrader", function () {
       
     })
 
+
+    it("Calculate Leverage", async() => {
+
+      const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, btcInitailPrice } = await loadFixture(deployAndDepositTest)
+
+      const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
+
+      await gho.write.approve([perpTrader.address, 10n])
+
+      await perpTrader.write.openPosition([pair, 100n, 10n, false])
+
+      expect(await perpTrader.read.getTraderLeverage([user1.account.address])).to.be.equal(10n)
+
+      // Increase BTC Price relative to dollar by 50%
+      await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
+
+      expect(await perpTrader.read.getTraderLeverage([user1.account.address])).to.be.equal(1n)
+
+      // decrease BTC Price relative to dollar by 50%
+      await btcPriceFeeds.write.updateAnswer([btcInitailPrice / 2n])
+
+      expect(await perpTrader.read.getTraderLeverage([user1.account.address])).to.be.equal(1000n)
+      
+    })
+
   })
 
   describe("Close Position", function () {
@@ -317,12 +342,18 @@ describe("PerpTrader", function () {
 
       expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(0n)
 
+      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(10n)
+      expect(await perpTrader.read.collaterals()).to.be.equal(10n)
+      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(10n)
+
+      await expect(perpTrader.read.myPositionIds([user1.account.address, 1n])).rejectedWith("")
+
     })
 
 
     it("Should close position with profit", async() => {
 
-      const { perpTrader, gho, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
+      const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, btcInitailPrice } = await loadFixture(deployAndDepositTest)
 
       const pair = {baseCurrency: checksumAddress(btc.address), quoteCurrency: checksumAddress(eth.address) }
 
@@ -331,6 +362,9 @@ describe("PerpTrader", function () {
       await gho.write.approve([perpTrader.address, 10n])
 
       await perpTrader.write.openPosition([pair, 100n, 10n, true])
+
+      // Increase BTC Price relative to dollar by 50%
+      await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
 
       await perpTrader.write.closePosition([1n])
 
@@ -344,6 +378,49 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.openShortInterestIntokens([pairKey])).to.be.equal(0n)
 
       expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(0n)
+
+      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(110n)
+      expect(await perpTrader.read.collaterals()).to.be.equal(110n)
+      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(110n)
+
+      await expect(perpTrader.read.myPositionIds([user1.account.address, 1n])).rejectedWith("")
+
+    })
+
+
+    it("Should close position with loss", async() => {
+
+      const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, btcInitailPrice } = await loadFixture(deployAndDepositTest)
+
+      const pair = {baseCurrency: checksumAddress(btc.address), quoteCurrency: checksumAddress(eth.address) }
+
+      const pairKey = await perpTrader.read.getPairKey([pair])
+
+      await gho.write.approve([perpTrader.address, 10n])
+
+      await perpTrader.write.openPosition([pair, 100n, 10n, true])
+
+      // decrease BTC Price relative to dollar by 50%
+      await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
+
+      await perpTrader.write.closePosition([1n])
+
+      expect(await perpTrader.read.totalOpenLongInterest()).to.be.equal(0n)
+      expect(await perpTrader.read.totalOpenShortInterest()).to.be.equal(0n)
+
+      expect(await perpTrader.read.openLongInterestInGho([pairKey])).to.be.equal(0n)
+      expect(await perpTrader.read.openShortInterestInGho([pairKey])).to.be.equal(0n)
+
+      expect(await perpTrader.read.openLongInterestIntokens([pairKey])).to.be.equal(0n)
+      expect(await perpTrader.read.openShortInterestIntokens([pairKey])).to.be.equal(0n)
+
+      expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(0n)
+
+      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(0n)
+      expect(await perpTrader.read.collaterals()).to.be.equal(0n)
+      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(0n)
+
+      await expect(perpTrader.read.myPositionIds([user1.account.address, 1n])).rejectedWith("")
 
     })
 
