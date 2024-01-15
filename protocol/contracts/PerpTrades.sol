@@ -149,7 +149,6 @@ contract PerpTrades is ERC4626, Ownable {
 
     function openPosition(PairStruct memory pair, uint _size, uint _collateral, bool _isLong) external onlySupportedPair(pair) {
         uint amount = getPairPrice(pair) * _size;
-        
         positions[++positionId] = PositionStruct({
             trader: msg.sender,
             pair: pair,
@@ -169,6 +168,8 @@ contract PerpTrades is ERC4626, Ownable {
     function closePosition(uint _positionId) public {
         
         PositionStruct memory position = positions[_positionId];
+        positions[_positionId].isOpen = false;
+
         int pnl = positionPnl(_positionId);
 
         if (pnl > 0) {
@@ -202,7 +203,6 @@ contract PerpTrades is ERC4626, Ownable {
         }
 
 
-
         emit PositionClosed(positionId, position.pair, position.trader, position.size);
         
     }
@@ -211,6 +211,10 @@ contract PerpTrades is ERC4626, Ownable {
     /************************************************************************
      *                          Public View Functions                       *
      ************************************************************************/
+
+    function getSupportedPairs () external view returns (PairStruct [] memory) {
+        return supportedPairArray;
+    }
 
     function getPairKey(PairStruct memory pair) public pure returns(bytes32) {
         return keccak256(abi.encode(pair));
@@ -224,12 +228,6 @@ contract PerpTrades is ERC4626, Ownable {
         (, int256 basePrice,,,) = priceFeeds[pair.baseCurrency].latestRoundData();
         (, int256 quotePrice,,,) = priceFeeds[pair.quoteCurrency].latestRoundData();
         return uint(basePrice * int(DECIMAL) / quotePrice);
-    }
-
-    function convertPriceToGho(address _token) public view returns (uint) {
-        (, int256 ghoPrice,,,) = ghoPriceFeeds.latestRoundData();
-        (, int256 assetPrice,,,) = priceFeeds[_token].latestRoundData();
-        return uint(assetPrice * int(DECIMAL) / ghoPrice);
     }
 
     function totalPnL() public view returns(int pnl) {
@@ -256,6 +254,8 @@ contract PerpTrades is ERC4626, Ownable {
 
             PositionStruct memory position = positions[_myPositionIds[i]];
 
+            uint interest = calculateInterest(position.size, position.openedAt);
+
             uint currentPrice = getPairPrice(position.pair);
 
             if (position.isLong) {
@@ -263,6 +263,8 @@ contract PerpTrades is ERC4626, Ownable {
             } else {
                 pnl += int(position.size) - int(position.value / currentPrice);
             }
+
+            pnl -= int(interest);
 
         }
 
@@ -273,6 +275,8 @@ contract PerpTrades is ERC4626, Ownable {
 
         PositionStruct memory position = positions[_positionId];
 
+        uint interest = calculateInterest(position.size, position.openedAt);
+
         uint currentPrice = getPairPrice(position.pair);
 
         if (position.isLong) {
@@ -281,11 +285,12 @@ contract PerpTrades is ERC4626, Ownable {
             pnl += int(position.size) - int(position.value / currentPrice);
         }
 
+        pnl -= int(interest);
+
     }
 
     function getTraderLeverage(address trader) public view returns(uint leverage) {
         int traderPositionValue = int(myCollateral[trader]) + traderPnL(trader);
-        console.logInt(traderPositionValue);
         // set leverage to 2x max leverage when user collateral is less than the loses
         if (traderPositionValue < 1) return maxLeverage * 2;
         leverage = myPositionSize[trader]  / uint(traderPositionValue);

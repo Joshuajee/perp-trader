@@ -1,5 +1,4 @@
 import { viem } from "hardhat"
-import { parseEther } from "viem";
 
 export const DECIMAL = 10n ** 38n
 

@@ -5,7 +5,7 @@ import {
 import { expect } from "chai";
 import { viem } from "hardhat";
 import { checksumAddress, parseEther, parseGwei } from "viem";
-import { deploy,  depositLiquidity } from "../scripts/helpers";
+import { calculatePrice, deploy,  depositLiquidity } from "../scripts/helpers";
 import { deployPriceAggregator, deployTokens } from "../scripts/mockHelper";
 
 describe("PerpTrader", function () {
@@ -164,19 +164,17 @@ describe("PerpTrader", function () {
 
       await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
 
+      const positionOpenedTime = (await time.latest()).toString();
+
       const position = await perpTrader.read.positions([1n])
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
-      const price = 4400n
+      const price = calculatePrice()
 
       expect(position).deep.be.equal([
-        checksumAddress(user1.account.address),
-        pair,
-        sizeAmount,
-        price,
-        true,
-        true
+        checksumAddress(user1.account.address), pair,
+        sizeAmount, price, positionOpenedTime, true, true
       ])
 
       expect(await perpTrader.read.totalOpenLongInterest()).to.be.equal(sizeAmount)
@@ -204,15 +202,17 @@ describe("PerpTrader", function () {
 
       await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, false])
 
+      const positionOpenedTime = (await time.latest()).toString();
+
       const position = await perpTrader.read.positions([1n])
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
-      const price = 4400n
+      const price = calculatePrice()
 
       expect(position).deep.be.equal([
         checksumAddress(user1.account.address), pair, sizeAmount,
-        price,false,true
+        price, positionOpenedTime, false, true
       ])
 
       expect(await perpTrader.read.totalOpenLongInterest()).to.be.equal(0n)
@@ -242,6 +242,8 @@ describe("PerpTrader", function () {
 
       await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
 
+      const positionOpenedTime = BigInt(await time.latest())
+
       expect(await perpTrader.read.totalPnL()).to.be.equal(0n)
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(0n)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(0n)
@@ -249,16 +251,22 @@ describe("PerpTrader", function () {
       // Increase BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
 
+      const interest1 = await perpTrader.read.calculateInterest([sizeAmount, positionOpenedTime])
+
       expect(await perpTrader.read.totalPnL()).to.be.equal(sizeAmount)
-      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(sizeAmount)
-      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(sizeAmount)
+      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(sizeAmount - interest1)
+      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(sizeAmount - interest1)
 
       // decrease BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
 
-      expect(await perpTrader.read.totalPnL()).to.be.equal(-sizeAmount / 2n)
-      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(-sizeAmount / 2n)
-      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(-sizeAmount / 2n)
+      const interest2 = await perpTrader.read.calculateInterest([sizeAmount, positionOpenedTime])
+
+      const expectedPnl = -sizeAmount / 2n
+
+      expect(await perpTrader.read.totalPnL()).to.be.equal(expectedPnl)
+      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(expectedPnl - interest2)
+      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(expectedPnl - interest2)
 
     })
 
@@ -272,6 +280,8 @@ describe("PerpTrader", function () {
 
       await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, false])
 
+      const positionOpenedTime = BigInt(await time.latest())
+
       expect(await perpTrader.read.totalPnL()).to.be.equal(0n)
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(0n)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(0n)
@@ -279,16 +289,22 @@ describe("PerpTrader", function () {
       // Increase BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
 
+      const interest1 = await perpTrader.read.calculateInterest([sizeAmount, positionOpenedTime])
+
       expect(await perpTrader.read.totalPnL()).to.be.equal(-sizeAmount)
-      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(-sizeAmount)
-      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(-sizeAmount)
+      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(-sizeAmount - interest1)
+      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(-sizeAmount - interest1)
 
       // decrease BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
 
-      expect(await perpTrader.read.totalPnL()).to.be.equal(sizeAmount / 2n)
-      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(sizeAmount / 2n)
-      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(sizeAmount / 2n)
+      const interest2 = await perpTrader.read.calculateInterest([sizeAmount, positionOpenedTime])
+
+      const expectedPnl = sizeAmount / 2n
+
+      expect(await perpTrader.read.totalPnL()).to.be.equal(expectedPnl)
+      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(expectedPnl - interest2)
+      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(expectedPnl - interest2)
       
     })
 
@@ -319,6 +335,10 @@ describe("PerpTrader", function () {
 
   })
 
+
+
+
+
   describe("Close Position", function () {
 
     it("Should close position with no profit or loss", async() => {
@@ -333,6 +353,8 @@ describe("PerpTrader", function () {
 
       await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
 
+      const positionOpenedTime = BigInt(await time.latest())
+
       await perpTrader.write.closePosition([1n])
 
       expect(await perpTrader.read.totalOpenLongInterest()).to.be.equal(0n)
@@ -346,9 +368,13 @@ describe("PerpTrader", function () {
 
       expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(0n)
 
-      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(collateralAmount)
-      expect(await perpTrader.read.collaterals()).to.be.equal(collateralAmount)
-      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(collateralAmount)
+      const interest = await perpTrader.read.calculateInterest([sizeAmount, positionOpenedTime])
+
+      const collateral = collateralAmount - interest;
+
+      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(collateral)
+      expect(await perpTrader.read.collaterals()).to.be.equal(collateral)
+      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(collateral)
 
       await expect(perpTrader.read.myPositionIds([user1.account.address, 1n])).rejectedWith("")
 
@@ -370,6 +396,8 @@ describe("PerpTrader", function () {
 
       await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
 
+      const positionOpenedTime = BigInt(await time.latest())
+
       // Increase BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
 
@@ -386,9 +414,13 @@ describe("PerpTrader", function () {
 
       expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(0n)
 
-      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(110n * 10n ** 18n)
-      expect(await perpTrader.read.collaterals()).to.be.equal(110n * 10n ** 18n)
-      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(110n * 10n ** 18n)
+      const interest = await perpTrader.read.calculateInterest([sizeAmount, positionOpenedTime])
+
+      const collateral = (110n * 10n ** 18n) - interest;
+
+      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(collateral)
+      expect(await perpTrader.read.collaterals()).to.be.equal(collateral)
+      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(collateral)
 
       await expect(perpTrader.read.myPositionIds([user1.account.address, 1n])).rejectedWith("")
 

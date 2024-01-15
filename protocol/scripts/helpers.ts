@@ -20,6 +20,6 @@ export const depositLiquidity = async(_gho: Address, _perpTrader: Address,  amou
 }
 
 
-const calculatePrice = async() => {
-    
+export const calculatePrice = () => {
+    return 10000000000000000000000000000000000000000000000000000000000n
 }
