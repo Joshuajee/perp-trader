@@ -9,14 +9,14 @@ dotenv.config()
 
 const config: HardhatUserConfig = {
   solidity: "0.8.20",
-  // abiExporter: [
-	// 	{
-	// 		path: '../src/abi',
-	// 		pretty: false,
-	// 		runOnCompile: true,
-  //     only: [ "PerpTrades", "CollateralBank"]
-	// 	}
-	// ],
+  abiExporter: [
+		{
+			path: '../client/src/abi',
+			pretty: false,
+			runOnCompile: true,
+      		only: ["PerpTrades", "CollateralBank", "MockERC20.sol"]
+		}
+	],
 	contractSizer: {
 		alphaSort: true,
 		disambiguatePaths: false,

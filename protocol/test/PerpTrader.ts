@@ -359,7 +359,10 @@ describe("PerpTrader", function () {
 
       const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, btcInitailPrice } = await loadFixture(deployAndDepositTest)
 
-      const pair = {baseCurrency: checksumAddress(btc.address), quoteCurrency: checksumAddress(eth.address) }
+      const pair = {
+        baseCurrency: checksumAddress(btc.address), 
+        quoteCurrency: checksumAddress(eth.address) 
+      }
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
@@ -383,9 +386,9 @@ describe("PerpTrader", function () {
 
       expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(0n)
 
-      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(110n)
-      expect(await perpTrader.read.collaterals()).to.be.equal(110n)
-      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(110n)
+      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(110n * 10n ** 18n)
+      expect(await perpTrader.read.collaterals()).to.be.equal(110n * 10n ** 18n)
+      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(110n * 10n ** 18n)
 
       await expect(perpTrader.read.myPositionIds([user1.account.address, 1n])).rejectedWith("")
 
