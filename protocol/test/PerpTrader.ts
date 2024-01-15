@@ -4,13 +4,17 @@ import {
 } from "@nomicfoundation/hardhat-toolbox-viem/network-helpers";
 import { expect } from "chai";
 import { viem } from "hardhat";
-import { checksumAddress, parseGwei } from "viem";
+import { checksumAddress, parseEther, parseGwei } from "viem";
 import { deploy,  depositLiquidity } from "../scripts/helpers";
 import { deployPriceAggregator, deployTokens } from "../scripts/mockHelper";
 
 describe("PerpTrader", function () {
 
-  const amount = parseGwei("100", "wei")
+  const amount = parseEther("10000", "wei")
+
+  const sizeAmount = parseEther("100", "wei")
+
+  const collateralAmount = parseEther("10", "wei")
 
   async function deployTest() {
 
@@ -156,9 +160,9 @@ describe("PerpTrader", function () {
 
       const pair = {baseCurrency: checksumAddress(btc.address), quoteCurrency: checksumAddress(eth.address) }
 
-      await gho.write.approve([perpTrader.address, 10n])
+      await gho.write.approve([perpTrader.address, collateralAmount])
 
-      await perpTrader.write.openPosition([pair, 100n, 10n, true])
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
 
       const position = await perpTrader.read.positions([1n])
 
@@ -169,23 +173,23 @@ describe("PerpTrader", function () {
       expect(position).deep.be.equal([
         checksumAddress(user1.account.address),
         pair,
-        100n,
+        sizeAmount,
         price,
         true,
         true
       ])
 
-      expect(await perpTrader.read.totalOpenLongInterest()).to.be.equal(100n)
+      expect(await perpTrader.read.totalOpenLongInterest()).to.be.equal(sizeAmount)
       expect(await perpTrader.read.totalOpenShortInterest()).to.be.equal(0n)
 
 
-      expect(await perpTrader.read.openLongInterestInGho([pairKey])).to.be.equal(100n)
+      expect(await perpTrader.read.openLongInterestInGho([pairKey])).to.be.equal(sizeAmount)
       expect(await perpTrader.read.openShortInterestInGho([pairKey])).to.be.equal(0n)
 
       expect(await perpTrader.read.openLongInterestIntokens([pairKey])).to.be.equal(price)
       expect(await perpTrader.read.openShortInterestIntokens([pairKey])).to.be.equal(0n)
 
-      expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(100n)
+      expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(sizeAmount)
 
     })
 
@@ -196,9 +200,9 @@ describe("PerpTrader", function () {
 
       const pair = {baseCurrency: checksumAddress(btc.address), quoteCurrency: checksumAddress(eth.address)}
 
-      await gho.write.approve([perpTrader.address, 10n])
+      await gho.write.approve([perpTrader.address, collateralAmount])
 
-      await perpTrader.write.openPosition([pair, 100n, 10n, false])
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, false])
 
       const position = await perpTrader.read.positions([1n])
 
@@ -207,20 +211,20 @@ describe("PerpTrader", function () {
       const price = 4400n
 
       expect(position).deep.be.equal([
-        checksumAddress(user1.account.address), pair, 100n,
+        checksumAddress(user1.account.address), pair, sizeAmount,
         price,false,true
       ])
 
       expect(await perpTrader.read.totalOpenLongInterest()).to.be.equal(0n)
-      expect(await perpTrader.read.totalOpenShortInterest()).to.be.equal(100n)
+      expect(await perpTrader.read.totalOpenShortInterest()).to.be.equal(sizeAmount)
 
       expect(await perpTrader.read.openLongInterestInGho([pairKey])).to.be.equal(0n)
-      expect(await perpTrader.read.openShortInterestInGho([pairKey])).to.be.equal(100n)
+      expect(await perpTrader.read.openShortInterestInGho([pairKey])).to.be.equal(sizeAmount)
       
       expect(await perpTrader.read.openLongInterestIntokens([pairKey])).to.be.equal(0n)
       expect(await perpTrader.read.openShortInterestIntokens([pairKey])).to.be.equal(price)
 
-      expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(100n)
+      expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(sizeAmount)
 
     })
 
@@ -234,9 +238,9 @@ describe("PerpTrader", function () {
 
       const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
 
-      await gho.write.approve([perpTrader.address, 10n])
+      await gho.write.approve([perpTrader.address, collateralAmount])
 
-      await perpTrader.write.openPosition([pair, 100n, 10n, true])
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
 
       expect(await perpTrader.read.totalPnL()).to.be.equal(0n)
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(0n)
@@ -245,16 +249,16 @@ describe("PerpTrader", function () {
       // Increase BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
 
-      expect(await perpTrader.read.totalPnL()).to.be.equal(100n)
-      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(100n)
-      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(100n)
+      expect(await perpTrader.read.totalPnL()).to.be.equal(sizeAmount)
+      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(sizeAmount)
+      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(sizeAmount)
 
       // decrease BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
 
-      expect(await perpTrader.read.totalPnL()).to.be.equal(-50n)
-      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(-50n)
-      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(-50n)
+      expect(await perpTrader.read.totalPnL()).to.be.equal(-sizeAmount / 2n)
+      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(-sizeAmount / 2n)
+      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(-sizeAmount / 2n)
 
     })
 
@@ -264,9 +268,9 @@ describe("PerpTrader", function () {
 
       const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
 
-      await gho.write.approve([perpTrader.address, 10n])
+      await gho.write.approve([perpTrader.address, collateralAmount])
 
-      await perpTrader.write.openPosition([pair, 100n, 10n, false])
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, false])
 
       expect(await perpTrader.read.totalPnL()).to.be.equal(0n)
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(0n)
@@ -275,16 +279,16 @@ describe("PerpTrader", function () {
       // Increase BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
 
-      expect(await perpTrader.read.totalPnL()).to.be.equal(-100n)
-      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(-100n)
-      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(-100n)
+      expect(await perpTrader.read.totalPnL()).to.be.equal(-sizeAmount)
+      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(-sizeAmount)
+      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(-sizeAmount)
 
       // decrease BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
 
-      expect(await perpTrader.read.totalPnL()).to.be.equal(50n)
-      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(50n)
-      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(50n)
+      expect(await perpTrader.read.totalPnL()).to.be.equal(sizeAmount / 2n)
+      expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(sizeAmount / 2n)
+      expect(await perpTrader.read.positionPnl([1n])).to.be.equal(sizeAmount / 2n)
       
     })
 
@@ -295,9 +299,9 @@ describe("PerpTrader", function () {
 
       const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
 
-      await gho.write.approve([perpTrader.address, 10n])
+      await gho.write.approve([perpTrader.address, collateralAmount])
 
-      await perpTrader.write.openPosition([pair, 100n, 10n, false])
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, false])
 
       expect(await perpTrader.read.getTraderLeverage([user1.account.address])).to.be.equal(10n)
 
@@ -325,9 +329,9 @@ describe("PerpTrader", function () {
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
-      await gho.write.approve([perpTrader.address, 10n])
+      await gho.write.approve([perpTrader.address, collateralAmount])
 
-      await perpTrader.write.openPosition([pair, 100n, 10n, true])
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
 
       await perpTrader.write.closePosition([1n])
 
@@ -342,9 +346,9 @@ describe("PerpTrader", function () {
 
       expect(await perpTrader.read.myPositionSize([user1.account.address])).to.be.equal(0n)
 
-      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(10n)
-      expect(await perpTrader.read.collaterals()).to.be.equal(10n)
-      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(10n)
+      expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(collateralAmount)
+      expect(await perpTrader.read.collaterals()).to.be.equal(collateralAmount)
+      expect(await perpTrader.read.myCollateral([user1.account.address])).to.be.equal(collateralAmount)
 
       await expect(perpTrader.read.myPositionIds([user1.account.address, 1n])).rejectedWith("")
 
@@ -359,9 +363,9 @@ describe("PerpTrader", function () {
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
-      await gho.write.approve([perpTrader.address, 10n])
+      await gho.write.approve([perpTrader.address, collateralAmount])
 
-      await perpTrader.write.openPosition([pair, 100n, 10n, true])
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
 
       // Increase BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
@@ -396,9 +400,9 @@ describe("PerpTrader", function () {
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
-      await gho.write.approve([perpTrader.address, 10n])
+      await gho.write.approve([perpTrader.address, collateralAmount])
 
-      await perpTrader.write.openPosition([pair, 100n, 10n, true])
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
 
       // decrease BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])

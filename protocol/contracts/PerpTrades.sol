@@ -11,6 +11,10 @@ import "hardhat/console.sol";
 
 contract PerpTrades is ERC4626, Ownable {
 
+    struct TraderProfile {
+        uint16 maxLeverage;
+    }
+
     struct PairStruct {
         address baseCurrency;
         address quoteCurrency;
@@ -21,6 +25,7 @@ contract PerpTrades is ERC4626, Ownable {
         PairStruct pair;
         uint size;
         uint value;
+        uint openedAt;
         bool isLong;
         bool isOpen;
     }
@@ -28,6 +33,7 @@ contract PerpTrades is ERC4626, Ownable {
     error PairAlreadyExist();
     error PairNotSupported(PairStruct pair);
     error MaximumNumberOfPairReached();
+    error TraderOverLeveraged(address trader, uint maxLeverage, uint leverage);
 
     event DepositLiquidity(address indexed liquidityProvider, uint assets);
     event DepositCollateral(address indexed liquidityProvider, uint assets);
@@ -93,6 +99,7 @@ contract PerpTrades is ERC4626, Ownable {
 
     // Admin Variables
     uint8 public maximumNumberOfPairs = 100;
+    // interest rate per year
     uint8 public interestRate = 5;
     uint8 public liquidationFeePercent = 5;
     uint16 public maxLeverage = 500;
@@ -148,12 +155,13 @@ contract PerpTrades is ERC4626, Ownable {
             pair: pair,
             size: _size,
             value: amount,
+            openedAt: block.timestamp,
             isLong: _isLong,
             isOpen: true
         });
-        _updatePositions(pair, _size, amount, _isLong);
         myPositionIds[msg.sender].push(positionId); 
         if (_collateral > 0) addCollateral(_collateral);
+        _updatePositions(pair, _size, amount, _isLong);
         emit PositionOpened(positionId, pair, msg.sender, _size, true);
     }
 
@@ -275,7 +283,6 @@ contract PerpTrades is ERC4626, Ownable {
 
     }
 
-
     function getTraderLeverage(address trader) public view returns(uint leverage) {
         int traderPositionValue = int(myCollateral[trader]) + traderPnL(trader);
         console.logInt(traderPositionValue);
@@ -284,12 +291,16 @@ contract PerpTrades is ERC4626, Ownable {
         leverage = myPositionSize[trader]  / uint(traderPositionValue);
     }
 
+    function calculateInterest(uint _size, uint _openedAt) public view returns (uint) {
+        return _size * (block.timestamp - _openedAt) * interestRate / (365 days);
+    }
+
 
     /************************************************************************
      *                          Internal Functions                          *
      ************************************************************************/    
 
-    function _updatePositions(PairStruct memory _pair, uint _size, uint _amount, bool _isLong) internal {
+    function _updatePositions(PairStruct memory _pair, uint _size, uint _amount, bool _isLong) internal isBelowLeverage {
         bytes32 pairKey = getPairKey(_pair);
         if (_isLong) {
             totalOpenLongInterest += _size;    
@@ -301,6 +312,7 @@ contract PerpTrades is ERC4626, Ownable {
             openShortInterestIntokens[pairKey] += _amount;  
         }
         myPositionSize[msg.sender] += _size;
+
     }
 
     function _reducePositions(PairStruct memory _pair, uint _size, uint _amount, bool _isLong) internal {
@@ -344,6 +356,11 @@ contract PerpTrades is ERC4626, Ownable {
         _;
     }
 
+    modifier isBelowLeverage() {
+        _;
+        uint leverage = getTraderLeverage(msg.sender);
+        if (leverage > maxLeverage) revert TraderOverLeveraged(msg.sender, leverage, maxLeverage);
+    }
 
 }
 
