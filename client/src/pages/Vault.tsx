@@ -27,7 +27,8 @@ export default function Vault() {
                 <div>
                     <h3 className="text-md mb-2 flex  gap-2 items-center"> <TbTransferIn size={16} /> <span>Supply Token</span></h3>
                     <div className="h-12 rounded-md border border-primary_2 bg-primary_1 flex">
-                        <input type="text" placeholder="0.0" className="h-full w-full bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
+                        <input type="text" placeholder="0.0" className="h-full w-[85%] bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
+                        <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
                     </div>
 
                     <button type="button" className="bg-green-700 text-white w-full py-3 rounded-lg mt-2">Deposit  </button>
@@ -35,7 +36,8 @@ export default function Vault() {
                 <div>
                     <h3 className="text-md mb-2 flex  gap-2 items-center"> <TbTransferOut size={16} /> <span>Withdraw Token</span></h3>
                     <div className="h-12 rounded-md border border-primary_2 bg-primary_1 flex">
-                        <input type="text" placeholder="0.0" className="h-full w-full bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
+                        <input type="text" placeholder="0.0" className="h-full w-[85%] bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
+                        <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
                     </div>
 
                     <button type="button" className="bg-purple-700 text-white w-full py-3 rounded-lg mt-2">Withdraw </button>

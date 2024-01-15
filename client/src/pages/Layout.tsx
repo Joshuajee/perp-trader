@@ -8,7 +8,7 @@ const Layout = () => {
 
     return (
         <>
-            <nav className="h-16 flex justify-between border-b border-primary_4">
+            <nav className="h-16 px-5 flex justify-between border-b border-primary_4">
                 <div className="w-[70%] h-full flex gap-7 items-center">
                     <img src={logo} alt="logo" className="w-24 pt-2" />
                     <ul className="flex gap-3 h-full  items-center">
