@@ -6,13 +6,19 @@ import NoPage from "@pages/NoPage";
 import Vault from "@pages/Vault";
 import Dashboard from "@pages/Dashboard";
 import Trades from "@pages/Trades";
+import { localhost } from "wagmi/chains";
+
+
+// Choose which chains you'd like to show
+const chains = [localhost];
+
 
 const config = createConfig(
   getDefaultConfig({
     // Required API Keys
     infuraId: import.meta.env.INFURA_ID, // or infuraId
     walletConnectProjectId: `${import.meta.env.WALLETCONNECT_PROJECT_ID}`,
-
+    chains,
     // Required
     appName: "Your App Name",
 
@@ -24,6 +30,7 @@ const config = createConfig(
 );
 
 const App = () => {
+  console.log(localhost)
   return (
     <WagmiConfig config={config}>
       <ConnectKitProvider>

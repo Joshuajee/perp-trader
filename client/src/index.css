@@ -17,7 +17,10 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  display: none;
+}
 
 .custom-gutter-horizontal {
   width: 0.1rem;
