@@ -16,8 +16,8 @@ contract PerpTrades is ERC4626, Ownable {
     }
 
     struct PairStruct {
-        address baseCurrency;
-        address quoteCurrency;
+        string baseCurrency;
+        string quoteCurrency;
     }
 
     struct PositionStruct {
@@ -34,6 +34,7 @@ contract PerpTrades is ERC4626, Ownable {
     error PairNotSupported(PairStruct pair);
     error MaximumNumberOfPairReached();
     error TraderOverLeveraged(address trader, uint maxLeverage, uint leverage);
+    error CannotWithdrawAboveAvailableLiquidity(uint amount, uint availableLiquidity);
 
     event DepositLiquidity(address indexed liquidityProvider, uint assets);
     event DepositCollateral(address indexed liquidityProvider, uint assets);
@@ -87,7 +88,7 @@ contract PerpTrades is ERC4626, Ownable {
     mapping(uint => PositionStruct) public positions;
 
     // mapping tokens to price feeds
-    mapping(address => AggregatorV3Interface) public priceFeeds;
+    mapping(string => AggregatorV3Interface) public priceFeeds;
     
     //store user open positons in an array
     mapping(address => uint[]) public myPositionIds;
@@ -142,14 +143,16 @@ contract PerpTrades is ERC4626, Ownable {
         collaterals -= assets;
         myCollateral[trader] -= assets;
         collateralBank.withdraw(trader, assets);
+        uint traderPositons = myPositionIds[trader].length;
+        if (traderPositons > 0) {
+            uint leverage = getTraderLeverage(msg.sender);
+            if (leverage  > maxLeverage) revert TraderOverLeveraged(msg.sender, leverage, maxLeverage);
+        }
         emit DepositCollateral(trader, assets);
     }
 
-
-
     function openPosition(PairStruct memory pair, uint _size, uint _collateral, bool _isLong) external onlySupportedPair(pair) {
         uint amount = getPairPrice(pair) * _size;
-        
         positions[++positionId] = PositionStruct({
             trader: msg.sender,
             pair: pair,
@@ -169,6 +172,8 @@ contract PerpTrades is ERC4626, Ownable {
     function closePosition(uint _positionId) public {
         
         PositionStruct memory position = positions[_positionId];
+        positions[_positionId].isOpen = false;
+
         int pnl = positionPnl(_positionId);
 
         if (pnl > 0) {
@@ -176,8 +181,8 @@ contract PerpTrades is ERC4626, Ownable {
             gho.safeTransfer(address(collateralBank), profit);
             myCollateral[position.trader] += profit; 
             collaterals += profit;
-        } else {
-            uint loss = uint(pnl);
+        } else if (pnl < 0) {
+            uint loss = uint(-1 * pnl);
             if (loss > myCollateral[position.trader]) {
                 collateralBank.withdraw(address(this), myCollateral[position.trader]);
                 collaterals -= myCollateral[position.trader];
@@ -202,7 +207,6 @@ contract PerpTrades is ERC4626, Ownable {
         }
 
 
-
         emit PositionClosed(positionId, position.pair, position.trader, position.size);
         
     }
@@ -211,6 +215,10 @@ contract PerpTrades is ERC4626, Ownable {
     /************************************************************************
      *                          Public View Functions                       *
      ************************************************************************/
+
+    function getSupportedPairs () external view returns (PairStruct [] memory) {
+        return supportedPairArray;
+    }
 
     function getPairKey(PairStruct memory pair) public pure returns(bytes32) {
         return keccak256(abi.encode(pair));
@@ -224,12 +232,6 @@ contract PerpTrades is ERC4626, Ownable {
         (, int256 basePrice,,,) = priceFeeds[pair.baseCurrency].latestRoundData();
         (, int256 quotePrice,,,) = priceFeeds[pair.quoteCurrency].latestRoundData();
         return uint(basePrice * int(DECIMAL) / quotePrice);
-    }
-
-    function convertPriceToGho(address _token) public view returns (uint) {
-        (, int256 ghoPrice,,,) = ghoPriceFeeds.latestRoundData();
-        (, int256 assetPrice,,,) = priceFeeds[_token].latestRoundData();
-        return uint(assetPrice * int(DECIMAL) / ghoPrice);
     }
 
     function totalPnL() public view returns(int pnl) {
@@ -256,6 +258,8 @@ contract PerpTrades is ERC4626, Ownable {
 
             PositionStruct memory position = positions[_myPositionIds[i]];
 
+            uint interest = calculateInterest(position.size, position.openedAt);
+
             uint currentPrice = getPairPrice(position.pair);
 
             if (position.isLong) {
@@ -263,6 +267,8 @@ contract PerpTrades is ERC4626, Ownable {
             } else {
                 pnl += int(position.size) - int(position.value / currentPrice);
             }
+
+            pnl -= int(interest);
 
         }
 
@@ -273,6 +279,8 @@ contract PerpTrades is ERC4626, Ownable {
 
         PositionStruct memory position = positions[_positionId];
 
+        uint interest = calculateInterest(position.size, position.openedAt);
+
         uint currentPrice = getPairPrice(position.pair);
 
         if (position.isLong) {
@@ -281,11 +289,12 @@ contract PerpTrades is ERC4626, Ownable {
             pnl += int(position.size) - int(position.value / currentPrice);
         }
 
+        pnl -= int(interest);
+
     }
 
     function getTraderLeverage(address trader) public view returns(uint leverage) {
         int traderPositionValue = int(myCollateral[trader]) + traderPnL(trader);
-        console.logInt(traderPositionValue);
         // set leverage to 2x max leverage when user collateral is less than the loses
         if (traderPositionValue < 1) return maxLeverage * 2;
         leverage = myPositionSize[trader]  / uint(traderPositionValue);
@@ -293,6 +302,21 @@ contract PerpTrades is ERC4626, Ownable {
 
     function calculateInterest(uint _size, uint _openedAt) public view returns (uint) {
         return _size * (block.timestamp - _openedAt) * interestRate / (365 days);
+    }
+
+    function availableLiquidity() view public returns (uint) {
+        uint currentValueOfAssets = totalAssets();
+        uint totalDepositedAssets = gho.balanceOf(address(this));
+        uint totalOpenInterest = totalOpenLongInterest + totalOpenShortInterest;
+        if (currentValueOfAssets > totalDepositedAssets) {
+            return totalDepositedAssets - totalOpenInterest;
+        } 
+        return currentValueOfAssets - totalOpenInterest;
+    }
+
+    function maximumRemovableCollateral(address trader) view public {
+        uint leverage = getTraderLeverage(trader);
+        //uint collateral
     }
 
 
@@ -334,7 +358,7 @@ contract PerpTrades is ERC4626, Ownable {
      *                          Admin Only Functions                        *
      ************************************************************************/
 
-    function addPriceFeed(address _token, address _priceFeeds) external onlyOwner {
+    function addPriceFeed(string memory _token, address _priceFeeds) external onlyOwner {
         priceFeeds[_token] = AggregatorV3Interface(_priceFeeds);
     }
 
@@ -345,6 +369,7 @@ contract PerpTrades is ERC4626, Ownable {
         supportedPair[pairKey] = true;
         supportedPairArray.push(pair);
     }
+    
 
     /************************************************************************
      *                               Modifiers                              *
@@ -361,6 +386,55 @@ contract PerpTrades is ERC4626, Ownable {
         uint leverage = getTraderLeverage(msg.sender);
         if (leverage > maxLeverage) revert TraderOverLeveraged(msg.sender, leverage, maxLeverage);
     }
+
+
+
+    /************************************************************************
+     *                            ERC4646 Overrides                         *
+     ************************************************************************/
+
+    function totalAssets() public view override returns (uint) {
+        int pnl = totalPnL();
+        uint _totalAssets = super.totalAssets();
+
+        if (pnl > -1) {
+            return _totalAssets - uint(pnl);
+        }
+
+        return _totalAssets + uint(-1 * pnl);
+  
+    }
+
+
+    function _withdraw(
+        address caller,
+        address receiver,
+        address owner,
+        uint256 assets,
+        uint256 shares
+    ) internal override {
+
+        if (caller != owner) {
+            _spendAllowance(owner, caller, shares);
+        }
+
+        uint _availableLiquidity = availableLiquidity();
+        if (assets < _availableLiquidity) revert CannotWithdrawAboveAvailableLiquidity(assets, _availableLiquidity);
+
+        // If _asset is ERC-777, `transfer` can trigger a reentrancy AFTER the transfer happens through the
+        // `tokensReceived` hook. On the other hand, the `tokensToSend` hook, that is triggered before the transfer,
+        // calls the vault, which is assumed not malicious.
+        //
+        // Conclusion: we need to do the transfer after the burn so that any reentrancy would happen after the
+        // shares are burned and after the assets are transferred, which is a valid state.
+        _burn(owner, shares);
+
+        SafeERC20.safeTransfer(IERC20(asset()), receiver, assets);
+
+        emit Withdraw(caller, receiver, owner, assets, shares);
+    }
+
+
 
 }
 

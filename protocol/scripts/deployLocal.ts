@@ -10,7 +10,7 @@ const collateralAmount = parseEther("10", "wei")
 
 async function main() {
 
-    const {gho, btc, eth, link, forth }  = await deployTokens()
+    const {gho, ghoToken, btc, eth, link, forth }  = await deployTokens()
 
     console.log("-------------------------------------------------------------------")
 
@@ -18,13 +18,13 @@ async function main() {
 
     console.log("GHO:   ", gho.address)
 
-    console.log("BTC:   ", btc.address)
+    // console.log("BTC:   ", btc.address)
 
-    console.log("ETH:   ", eth.address)
+    // console.log("ETH:   ", eth.address)
 
-    console.log("LINK:  ", link.address)
+    // console.log("LINK:  ", link.address)
 
-    console.log("FORTH: ", forth.address)
+    // console.log("FORTH: ", forth.address)
 
     console.log("-------------------------------------------------------------------")
 
@@ -48,13 +48,13 @@ async function main() {
 
     const { perpTrader } = await deploy(gho.address, priceAggregator.ghoPriceFeeds.address)
 
-    await perpTrader.write.addPriceFeed([btc.address, priceAggregator.btcPriceFeeds.address])
+    await perpTrader.write.addPriceFeed([btc, priceAggregator.btcPriceFeeds.address])
 
-    await perpTrader.write.addPriceFeed([eth.address, priceAggregator.ethPriceFeeds.address])
+    await perpTrader.write.addPriceFeed([eth, priceAggregator.ethPriceFeeds.address])
 
     console.log("PerpTrader Deployed")
 
-    console.log("PerpTrader: ", perpTrader.address)
+    console.log("PerpTrader: ", perpTrader)
 
     console.log("-------------------------------------------------------------------")
 
@@ -62,58 +62,58 @@ async function main() {
 
     await perpTrader.write.addPair([
       {
-        baseCurrency: btc.address, 
-        quoteCurrency: eth.address
+        baseCurrency: btc, 
+        quoteCurrency: eth
       }]
     )
 
     await perpTrader.write.addPair([
-        {
-          baseCurrency: btc.address, 
-          quoteCurrency: link.address
-        }]
+      {
+        baseCurrency: btc, 
+        quoteCurrency: link
+      }]
     )
 
     await perpTrader.write.addPair([
-        {
-          baseCurrency: eth.address, 
-          quoteCurrency: link.address
-        }]
+      {
+        baseCurrency: eth, 
+        quoteCurrency: link
+      }]
     )
 
     await perpTrader.write.addPair([
-        {
-          baseCurrency: btc.address, 
-          quoteCurrency: forth.address
-        }]
+      {
+        baseCurrency: btc, 
+        quoteCurrency: forth
+      }]
     )
 
     await perpTrader.write.addPair([
-        {
-          baseCurrency: eth.address, 
-          quoteCurrency: forth.address
-        }]
+      {
+        baseCurrency: eth, 
+        quoteCurrency: forth
+      }]
     )
 
     await perpTrader.write.addPair([
-        {
-          baseCurrency: link.address, 
-          quoteCurrency: forth.address
-        }]
+      {
+        baseCurrency: link, 
+        quoteCurrency: forth
+      }]
     )
 
     await perpTrader.write.addPair([
-        {
-          baseCurrency: btc.address, 
-          quoteCurrency: gho.address
-        }]
+      {
+        baseCurrency: btc, 
+        quoteCurrency: ghoToken
+      }]
     )
 
     await perpTrader.write.addPair([
-        {
-          baseCurrency: eth.address, 
-          quoteCurrency: gho.address
-        }]
+      {
+        baseCurrency: eth, 
+        quoteCurrency: ghoToken
+      }]
     )
 }
 
