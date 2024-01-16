@@ -47,13 +47,15 @@ export async function deployTokens() {
 
     const gho = await viem.deployContract("MockERC20", ["gho", "gho"])
 
-    const btc = await viem.deployContract("MockERC20", ["btc", "btc"])
+    const ghoToken = "gho"
 
-    const eth = await viem.deployContract("MockERC20", ["eth", "eth"])
+    const btc = "btc"
 
-    const link = await viem.deployContract("MockERC20", ["link", "link"])
+    const eth = "eth"
 
-    const forth = await viem.deployContract("MockERC20", ["forth", "forth"])
+    const link = "link"
 
-    return { gho, btc, eth, link, forth }
+    const forth = "forth"
+
+    return { gho, ghoToken, btc, eth, link, forth }
 }

@@ -26,9 +26,9 @@ describe("PerpTrader", function () {
 
     const { perpTrader } = await deploy(tokens.gho.address, priceAggregator.ghoPriceFeeds.address)
 
-    await perpTrader.write.addPriceFeed([tokens.btc.address, priceAggregator.btcPriceFeeds.address])
+    await perpTrader.write.addPriceFeed([tokens.btc, priceAggregator.btcPriceFeeds.address])
 
-    await perpTrader.write.addPriceFeed([tokens.eth.address, priceAggregator.ethPriceFeeds.address])
+    await perpTrader.write.addPriceFeed([tokens.eth, priceAggregator.ethPriceFeeds.address])
     
     return { perpTrader, user1, user2, ...priceAggregator, ...tokens }
 
@@ -43,8 +43,8 @@ describe("PerpTrader", function () {
 
     await deploy.perpTrader.write.addPair([
       {
-        baseCurrency: deploy.btc.address, 
-        quoteCurrency: deploy.eth.address
+        baseCurrency: deploy.btc, 
+        quoteCurrency: deploy.eth
       }]
     )
     
@@ -74,6 +74,8 @@ describe("PerpTrader", function () {
 
       expect(await perpTrader.read.myDeposits([user1.account.address])).to.be.equal(amount)
 
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount)
+
     })
 
 
@@ -97,6 +99,8 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.deposits()).to.be.equal(0n)
 
       expect(await perpTrader.read.myDeposits([user1.account.address])).to.be.equal(0n)
+
+      expect(await perpTrader.read.totalAssets()).to.be.equal(0n)
 
     })
 
@@ -158,7 +162,7 @@ describe("PerpTrader", function () {
 
       const { perpTrader, gho, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
 
-      const pair = {baseCurrency: checksumAddress(btc.address), quoteCurrency: checksumAddress(eth.address) }
+      const pair = {baseCurrency: btc, quoteCurrency: eth }
 
       await gho.write.approve([perpTrader.address, collateralAmount])
 
@@ -196,7 +200,7 @@ describe("PerpTrader", function () {
 
       const { perpTrader, gho, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
 
-      const pair = {baseCurrency: checksumAddress(btc.address), quoteCurrency: checksumAddress(eth.address)}
+      const pair = {baseCurrency: btc, quoteCurrency: eth}
 
       await gho.write.approve([perpTrader.address, collateralAmount])
 
@@ -236,7 +240,7 @@ describe("PerpTrader", function () {
 
       const { perpTrader, gho, btc, eth, btcPriceFeeds, btcInitailPrice, user1 } = await loadFixture(deployAndDepositTest)
 
-      const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
+      const pair = {baseCurrency: btc, quoteCurrency: eth}
 
       await gho.write.approve([perpTrader.address, collateralAmount])
 
@@ -248,6 +252,8 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(0n)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(0n)
 
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount)
+
       // Increase BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
 
@@ -256,6 +262,8 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.totalPnL()).to.be.equal(sizeAmount)
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(sizeAmount - interest1)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(sizeAmount - interest1)
+
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount - await perpTrader.read.totalPnL())
 
       // decrease BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
@@ -268,13 +276,15 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(expectedPnl - interest2)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(expectedPnl - interest2)
 
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount - await perpTrader.read.totalPnL())
+
     })
 
     it("Should calculate for short position", async() => {
 
       const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, btcInitailPrice } = await loadFixture(deployAndDepositTest)
 
-      const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
+      const pair = {baseCurrency: btc, quoteCurrency: eth}
 
       await gho.write.approve([perpTrader.address, collateralAmount])
 
@@ -286,6 +296,8 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(0n)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(0n)
 
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount - await perpTrader.read.totalPnL())
+
       // Increase BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
 
@@ -294,6 +306,8 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.totalPnL()).to.be.equal(-sizeAmount)
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(-sizeAmount - interest1)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(-sizeAmount - interest1)
+
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount - await perpTrader.read.totalPnL())
 
       // decrease BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
@@ -305,6 +319,8 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.totalPnL()).to.be.equal(expectedPnl)
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(expectedPnl - interest2)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(expectedPnl - interest2)
+
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount - await perpTrader.read.totalPnL())
       
     })
 
@@ -313,7 +329,7 @@ describe("PerpTrader", function () {
 
       const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, btcInitailPrice } = await loadFixture(deployAndDepositTest)
 
-      const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
+      const pair = {baseCurrency: btc, quoteCurrency: eth}
 
       await gho.write.approve([perpTrader.address, collateralAmount])
 
@@ -345,7 +361,10 @@ describe("PerpTrader", function () {
 
       const { perpTrader, gho, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
 
-      const pair = {baseCurrency: checksumAddress(btc.address), quoteCurrency: checksumAddress(eth.address) }
+      const pair = {
+        baseCurrency: btc, 
+        quoteCurrency: eth 
+      }
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
@@ -386,8 +405,8 @@ describe("PerpTrader", function () {
       const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, btcInitailPrice } = await loadFixture(deployAndDepositTest)
 
       const pair = {
-        baseCurrency: checksumAddress(btc.address), 
-        quoteCurrency: checksumAddress(eth.address) 
+        baseCurrency: btc, 
+        quoteCurrency: eth 
       }
 
       const pairKey = await perpTrader.read.getPairKey([pair])
@@ -431,7 +450,7 @@ describe("PerpTrader", function () {
 
       const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, btcInitailPrice } = await loadFixture(deployAndDepositTest)
 
-      const pair = {baseCurrency: checksumAddress(btc.address), quoteCurrency: checksumAddress(eth.address) }
+      const pair = {baseCurrency: btc, quoteCurrency: eth }
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
@@ -472,14 +491,14 @@ describe("PerpTrader", function () {
 
       const { perpTrader, btc, eth } = await loadFixture(deployTest)
 
-      const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
+      const pair = {baseCurrency: btc, quoteCurrency: eth}
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
       await perpTrader.write.addPair([pair])
 
       expect(await perpTrader.read.supportedPairArray([0n])).deep.be.equal([
-        checksumAddress(btc.address), checksumAddress(eth.address)
+        btc, eth
       ])
 
       expect(await perpTrader.read.supportedPair([pairKey])).to.be.true
@@ -490,7 +509,7 @@ describe("PerpTrader", function () {
 
     //   const { perpTrader, btc, eth } = await loadFixture(deployTest)
 
-    //   const pair = {baseCurrency: btc.address, quoteCurrency: eth.address}
+    //   const pair = {baseCurrency: btc, quoteCurrency: eth}
 
     //   const pairKey = await perpTrader.read.getPairKey([pair])
 
