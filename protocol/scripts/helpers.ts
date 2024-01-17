@@ -23,3 +23,19 @@ export const depositLiquidity = async(_gho: Address, _perpTrader: Address,  amou
 export const calculatePrice = () => {
     return 10000000000000000000000000000000000000000000000000000000000n
 }
+
+
+export const tokenSymbols = () => {
+
+    const ghoToken = "gho"
+
+    const btc = "btc"
+
+    const eth = "eth"
+
+    const link = "link"
+
+    const forth = "forth"
+
+    return { ghoToken, btc, eth, link, forth }
+}

@@ -1,5 +1,5 @@
 import { deployPriceAggregator, deployTokens } from "./mockHelper";
-import { deploy, depositLiquidity } from "./helpers";
+import { deploy, depositLiquidity, tokenSymbols } from "./helpers";
 import { parseEther } from "viem";
 
 const amount = parseEther("10000", "wei")
@@ -10,115 +10,111 @@ const collateralAmount = parseEther("10", "wei")
 
 async function main() {
 
-    const {gho, ghoToken, btc, eth, link, forth }  = await deployTokens()
+  const { gho }  = await deployTokens()
 
-    console.log("-------------------------------------------------------------------")
+  const { ghoToken, btc, eth, link, forth }  = tokenSymbols()
 
-    console.log("Tokens Deployed")
+  console.log("-------------------------------------------------------------------")
 
-    console.log("GHO:   ", gho.address)
+  console.log("Tokens Deployed")
 
-    // console.log("BTC:   ", btc.address)
+  console.log("GHO:   ", gho.address)
 
-    // console.log("ETH:   ", eth.address)
+  console.log("-------------------------------------------------------------------")
 
-    // console.log("LINK:  ", link.address)
+  const priceAggregator = await deployPriceAggregator()
 
-    // console.log("FORTH: ", forth.address)
+  console.log("Chainlink Price Aggregator Deployed")
 
-    console.log("-------------------------------------------------------------------")
+  console.log("Tokens Deployed")
 
-    const priceAggregator = await deployPriceAggregator()
+  console.log("GHO Price Feeds:   ", priceAggregator.ghoPriceFeeds.address)
 
-    console.log("Chainlink Price Aggregator Deployed")
+  console.log("BTC Price Feeds:   ", priceAggregator.btcPriceFeeds.address)
 
-    console.log("Tokens Deployed")
+  console.log("ETH Price Feeds:   ", priceAggregator.ethPriceFeeds.address)
 
-    console.log("GHO Price Feeds:   ", priceAggregator.ghoPriceFeeds.address)
+  console.log("LINK Price Feeds:  ", priceAggregator.linkPriceFeeds.address)
 
-    console.log("BTC Price Feeds:   ", priceAggregator.btcPriceFeeds.address)
+  console.log("FORTH Price Feeds: ", priceAggregator.forthPriceFeeds.address)
 
-    console.log("ETH Price Feeds:   ", priceAggregator.ethPriceFeeds.address)
+  console.log("-------------------------------------------------------------------")
 
-    console.log("LINK Price Feeds:  ", priceAggregator.linkPriceFeeds.address)
+  const { perpTrader } = await deploy(gho.address, priceAggregator.ghoPriceFeeds.address)
 
-    console.log("FORTH Price Feeds: ", priceAggregator.forthPriceFeeds.address)
+  await perpTrader.write.addPriceFeed([btc, priceAggregator.btcPriceFeeds.address])
 
-    console.log("-------------------------------------------------------------------")
+  await perpTrader.write.addPriceFeed([eth, priceAggregator.ethPriceFeeds.address])
 
-    const { perpTrader } = await deploy(gho.address, priceAggregator.ghoPriceFeeds.address)
+  console.log("PerpTrader Deployed")
 
-    await perpTrader.write.addPriceFeed([btc, priceAggregator.btcPriceFeeds.address])
+  console.log("PerpTrader: ", perpTrader.address)
 
-    await perpTrader.write.addPriceFeed([eth, priceAggregator.ethPriceFeeds.address])
+  console.log("-------------------------------------------------------------------")
 
-    await perpTrader.write.addPriceFeed([link, priceAggregator.linkPriceFeeds.address])
+  await depositLiquidity(gho.address, perpTrader.address, amount)
 
-    await perpTrader.write.addPriceFeed([forth, priceAggregator.forthPriceFeeds.address])
+  await perpTrader.write.addPair([
+    {
+      baseCurrency: btc, 
+      quoteCurrency: eth
+    }]
+  )
 
-    console.log("PerpTrader Deployed")
+  await perpTrader.write.addPair([
+    {
+      baseCurrency: btc, 
+      quoteCurrency: link
+    }]
+  )
 
-    console.log("PerpTrader: ", perpTrader.address)
+  await perpTrader.write.addPair([
+    {
+      baseCurrency: eth, 
+      quoteCurrency: link
+    }]
+  )
 
-    console.log("-------------------------------------------------------------------")
+  await perpTrader.write.addPair([
+    {
+      baseCurrency: btc, 
+      quoteCurrency: forth
+    }]
+  )
 
-    await depositLiquidity(gho.address, perpTrader.address, amount)
+  await perpTrader.write.addPair([
+    {
+      baseCurrency: eth, 
+      quoteCurrency: forth
+    }]
+  )
 
-    await perpTrader.write.addPair([
-      {
-        baseCurrency: btc, 
-        quoteCurrency: eth
-      }]
-    )
+  await perpTrader.write.addPair([
+    {
+      baseCurrency: link, 
+      quoteCurrency: forth
+    }]
+  )
 
-    await perpTrader.write.addPair([
-      {
-        baseCurrency: btc, 
-        quoteCurrency: link
-      }]
-    )
+  await perpTrader.write.addPair([
+    {
+      baseCurrency: btc, 
+      quoteCurrency: ghoToken
+    }]
+  )
 
-    await perpTrader.write.addPair([
-      {
-        baseCurrency: eth, 
-        quoteCurrency: link
-      }]
-    )
+  await perpTrader.write.addPair([
+    {
+      baseCurrency: eth, 
+      quoteCurrency: ghoToken
+    }]
+  )
 
-    await perpTrader.write.addPair([
-      {
-        baseCurrency: btc, 
-        quoteCurrency: forth
-      }]
-    )
 
-    await perpTrader.write.addPair([
-      {
-        baseCurrency: eth, 
-        quoteCurrency: forth
-      }]
-    )
+  await perpTrader.write.addPriceFeed([link, priceAggregator.linkPriceFeeds.address])
 
-    await perpTrader.write.addPair([
-      {
-        baseCurrency: link, 
-        quoteCurrency: forth
-      }]
-    )
+  await perpTrader.write.addPriceFeed([forth, priceAggregator.forthPriceFeeds.address])
 
-    await perpTrader.write.addPair([
-      {
-        baseCurrency: btc, 
-        quoteCurrency: ghoToken
-      }]
-    )
-
-    await perpTrader.write.addPair([
-      {
-        baseCurrency: eth, 
-        quoteCurrency: ghoToken
-      }]
-    )
 }
 
 // We recommend this pattern to be able to use async/await everywhere

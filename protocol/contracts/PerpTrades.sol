@@ -356,7 +356,7 @@ contract PerpTrades is ERC4626, Ownable {
     }
 
 
-    function getVaultInfo() external view returns (uint, uint, uint) {
+    function getVaultInfo() external view returns (uint, uint, uint8) {
         return (totalAssets(), availableLiquidity(), interestRate);
     }
 
