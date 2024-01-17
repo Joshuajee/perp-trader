@@ -35,6 +35,7 @@ contract PerpTrades is ERC4626, Ownable {
     error MaximumNumberOfPairReached();
     error TraderOverLeveraged(address trader, uint maxLeverage, uint leverage);
     error CannotWithdrawAboveAvailableLiquidity(uint amount, uint availableLiquidity);
+    error CannotLiquidateTrader(uint traderLeverage, uint maxLeverage);
 
     event DepositLiquidity(address indexed liquidityProvider, uint assets);
     event DepositCollateral(address indexed liquidityProvider, uint assets);
@@ -44,6 +45,8 @@ contract PerpTrades is ERC4626, Ownable {
     event PositionSizeIncrease(uint indexed id, uint inc);
     event PositionCollateralIncreased(uint indexed id, uint inc);
     event PositionCollateralDecreased(uint indexed id, uint desc);
+    event LiquidateTrader(address indexed liquidator, address indexed trader, uint liquidationFee);
+    event LiquidatePosition(address indexed liquidator, address indexed trader, uint indexed positionId);
 
     using SafeERC20 for IERC20;
 
@@ -96,16 +99,12 @@ contract PerpTrades is ERC4626, Ownable {
     PairStruct [] public supportedPairArray;
     mapping(bytes32 => bool) public supportedPair;
 
-
-
     // Admin Variables
     uint8 public maximumNumberOfPairs = 100;
     // interest rate per year
     uint8 public interestRate = 5;
     uint8 public liquidationFeePercent = 5;
     uint16 public maxLeverage = 500;
-
-
 
     constructor(IERC20 _gho, address _ghoPriceFeeds, string memory _name, string memory _symbol) ERC4626(_gho) ERC20(_name, _symbol) Ownable(msg.sender) {
         collateralBank = new CollateralBank(_gho);
@@ -129,6 +128,32 @@ contract PerpTrades is ERC4626, Ownable {
         emit WithdrawLiquidity(liquidityProvider, assets);
         return super.withdraw(assets, liquidityProvider, liquidityProvider); 
     }
+
+
+
+    function liquidateTrader(address trader) external {
+        address liquidator = msg.sender;
+        uint liquidationFee = calculateLiquidationFee(trader);
+        uint leverage = getTraderLeverage(trader);
+        if (leverage < maxLeverage) revert CannotLiquidateTrader(leverage, maxLeverage);
+        uint [] memory _positionIds = myPositionIds[trader];
+        for (uint i = 0; i < _positionIds.length; i++) {
+            uint _positionId = _positionIds[i];
+            closePosition(_positionId);
+            uint _leverage = getTraderLeverage(trader);
+            emit LiquidatePosition(liquidator, trader, positionId);
+            if (_leverage < maxLeverage) break; 
+        }
+
+        gho.transfer(liquidator, liquidationFee);
+
+        emit LiquidateTrader(liquidator, trader, liquidationFee);
+    }
+
+
+    /************************************************************************
+     *                         Trader Write Functions                       *
+     ************************************************************************/
 
     function addCollateral(uint256 assets) public {
         address trader = msg.sender; 
@@ -169,7 +194,7 @@ contract PerpTrades is ERC4626, Ownable {
     }
 
 
-    function closePosition(uint _positionId) public {
+    function closePosition(uint _positionId) public  {
         
         PositionStruct memory position = positions[_positionId];
         positions[_positionId].isOpen = false;
@@ -302,6 +327,17 @@ contract PerpTrades is ERC4626, Ownable {
 
     function calculateInterest(uint _size, uint _openedAt) public view returns (uint) {
         return _size * (block.timestamp - _openedAt) * interestRate / (365 days);
+    }
+
+    function calculateLiquidationFee(address trader) public view returns (uint) {
+        int pnl = traderPnL(trader);
+        if (pnl > 0) return 0;
+        uint loss = uint(-1 * pnl);
+        uint collateral = myCollateral[trader];
+        if (collateral < loss) {
+            return collateral * liquidationFeePercent / 100;
+        }
+        return (collateral - loss)* liquidationFeePercent / 100;
     }
 
     function availableLiquidity() view public returns (uint) {

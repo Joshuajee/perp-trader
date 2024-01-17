@@ -2,7 +2,8 @@
   "name": "perp-trader",
   "scripts": {
     "deploy": "hardhat run --network sepolia scripts/deploy.ts",
-    "deploy-local": "hardhat run --network localhost scripts/deployLocal.ts"
+    "deploy-local": "hardhat run --network localhost scripts/deployLocal.ts",
+    "coverage": "hardhat coverage"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-network-helpers": "^1.0.0",
