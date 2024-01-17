@@ -256,6 +256,11 @@
   },
   {
     "inputs": [],
+    "name": "LiquidityNotEnoughToSupportPosition",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "MathOverflowedMulDiv",
     "type": "error"
   },
@@ -1067,13 +1072,7 @@
       }
     ],
     "name": "deposit",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
@@ -1225,6 +1224,11 @@
             "internalType": "address",
             "name": "trader",
             "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "collateral",
+            "type": "uint256"
           },
           {
             "internalType": "int256",
@@ -1404,6 +1408,24 @@
     ],
     "name": "maxRedeem",
     "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "maxUtilizationPercentage",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      },
       {
         "internalType": "uint256",
         "name": "",
@@ -2164,13 +2186,7 @@
       }
     ],
     "name": "withdraw",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "",
-        "type": "uint256"
-      }
-    ],
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },

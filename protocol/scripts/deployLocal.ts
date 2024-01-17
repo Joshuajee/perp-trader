@@ -114,6 +114,9 @@ async function main() {
   await perpTrader.write.addPriceFeed([link, priceAggregator.linkPriceFeeds.address])
 
   await perpTrader.write.addPriceFeed([forth, priceAggregator.forthPriceFeeds.address])
+  
+
+
 
 }
 

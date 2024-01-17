@@ -20,6 +20,15 @@ const config: HardhatUserConfig = {
           },
         },
       },
+      {
+        version: "0.8.18",
+        settings: {
+          optimizer: {
+            enabled: true,
+            runs: 200,
+          },
+        },
+      },
     ],
   },
 
@@ -45,7 +54,7 @@ const config: HardhatUserConfig = {
       chainId: 1337, // Customize the chain ID here
     },
     sepolia: {
-  		url: 'https://sepolia.drpc.org',
+  		url: 'https://eth-sepolia.g.alchemy.com/v2/o9-aEsEyIqQ2kyFIYiOzu35FTdI9A8DH',
   		accounts: [ PRIVATE_KEY ]
   	},
   },

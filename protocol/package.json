@@ -3,6 +3,7 @@
   "scripts": {
     "deploy": "hardhat run --network sepolia scripts/deploy.ts",
     "deploy-local": "hardhat run --network localhost scripts/deployLocal.ts",
+    "deploy-sepolia": "hardhat run --network sepolia scripts/deploySepolia.ts",
     "coverage": "hardhat coverage"
   },
   "devDependencies": {
