@@ -656,6 +656,9 @@ describe("PerpTrader", function () {
 
       console.log(await perpTrader.read.getTradersInfo())
 
+
+      console.log(await perpTrader.read.getVaultInfo())
+
     })
 
   })
