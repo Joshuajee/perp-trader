@@ -60,25 +60,25 @@ export function MakePosition() {
                     quoteCurrency: "GHO"
                 }
                 break;
-            case "2":
+            case "4":
                 pair = {
                     baseCurrency: "ETH",
                     quoteCurrency: "FORTH"
                 }
                 break;
-            case "2":
+            case "5":
                 pair = {
                     baseCurrency: "ETH",
                     quoteCurrency: "LINKS"
                 }
                 break;
-            case "2":
+            case "6":
                 pair = {
                     baseCurrency: "ETH",
                     quoteCurrency: "GHO"
                 }
                 break;
-            case "2":
+            case "7":
                 pair = {
                     baseCurrency: "LINKS",
                     quoteCurrency: "FORTH"
@@ -101,7 +101,7 @@ export function MakePosition() {
         <form onSubmit={submitForm} className=' rounded-xl bg-primary_4 m-auto flex flex-col gap-2   pb-3'>
             <select name="pair" onChange={handlePairChange} id="large" className="block py-3 px-4 w-full text-base text-gray-900  rounded-lg border border-primary_2 focus:ring-0 focus:outline-none dark:bg-primary_1
                                  dark:border-primary_2 dark:placeholder-gray-400 dark:text-white dark:focus:ring-0 dark:focus:border-primary_2  appearance-none">
-                <option selected>Choose a Pair</option>
+                <option defaultValue={""}>Choose a Pair</option>
                 <option value="1">BTC/ETH</option>
                 <option value="2">BTC/LINKS</option>
                 <option value="3">BTC/GHO</option>

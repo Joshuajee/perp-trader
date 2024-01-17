@@ -1,10 +1,6 @@
 import { GoGraph } from "react-icons/go";
-import { BsGraphDown } from "react-icons/bs";
-import { MdOutlineSwapHoriz } from "react-icons/md";
 import { Balances, DepositCollateral, MakePosition, Positions, PriceSummary } from "@components/Dashboard";
 import { FaChevronDown } from "react-icons/fa";
-import { TbArrowBigUpLinesFilled, TbTransferIn, TbTransferOut } from "react-icons/tb";
-import { TbArrowBigDownLinesFilled } from "react-icons/tb";
 import { TbPigMoney } from "react-icons/tb";
 import TradingViewWidget from "@components/Dashboard/TradingViewWidget";
 import { useState } from "react";
@@ -26,11 +22,11 @@ function Dashboard() {
                 <div className="w-[30%] h-fit">
                     <div className="w-full bg-primary_4 rounded-md py-5 px-4  flex flex-col gap-3">
                         <div className="m-auto h-10 w-full bg-primary_5 flex">
-                            <button onClick={() => setTab(0)} className={`bg-transparent ${tab === 0 ? "bg-primary_3" : ""} hover:bg-primary_3 hover:text-white
+                            <button onClick={() => setTab(0)} className={` ${tab === 0 ? "bg-primary_3" : "bg-transparent"} hover:bg-primary_3 hover:text-white
                          font-semibold text-sm h-full  flex items-center justify-center w-1/2 space-x-3`}>
                                 <GoGraph size={20} /> <span>Trade</span>
                             </button>
-                            <button onClick={() => setTab(1)} className={`bg-transparent ${tab === 1 ? "bg-primary_3" : ""} hover:bg-primary_3 hover:text-white
+                            <button onClick={() => setTab(1)} className={` ${tab === 1 ? "bg-primary_3" : "bg-transparent"} hover:bg-primary_3 hover:text-white
                          font-semibold text-sm h-full  flex items-center justify-center w-1/2 space-x-3`}>
                                 <TbPigMoney size={18} /> <span>Deposit</span>
                             </button>

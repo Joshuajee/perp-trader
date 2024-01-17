@@ -16,8 +16,8 @@ const chains = [localhost];
 const config = createConfig(
   getDefaultConfig({
     // Required API Keys
-    infuraId: import.meta.env.INFURA_ID, // or infuraId
-    walletConnectProjectId: `${import.meta.env.WALLETCONNECT_PROJECT_ID}`,
+    infuraId: import.meta.env.VITE_INFURA_ID, // or infuraId
+    walletConnectProjectId: `${import.meta.env.VITE_WALLETCONNECT_PROJECT_ID}`,
     chains,
     // Required
     appName: "Your App Name",
@@ -30,7 +30,7 @@ const config = createConfig(
 );
 
 const App = () => {
-  console.log(localhost)
+
   return (
     <WagmiConfig config={config}>
       <ConnectKitProvider>
