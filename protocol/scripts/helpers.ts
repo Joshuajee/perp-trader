@@ -2,7 +2,7 @@ import { viem } from "hardhat"
 import { Address } from "viem"
 
 export const deploy = async (gho: Address, ghoPriceFeeds: Address) => {
-    const perpTrader = await viem.deployContract("PerpTrades", [gho, ghoPriceFeeds, "agho", "agho"])
+    const perpTrader = await viem.deployContract("PerpTrades", [gho, ghoPriceFeeds, "aGho", "aGho"])
     return {perpTrader}
 }
 
