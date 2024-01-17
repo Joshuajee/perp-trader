@@ -52,9 +52,13 @@ async function main() {
 
     await perpTrader.write.addPriceFeed([eth, priceAggregator.ethPriceFeeds.address])
 
+    await perpTrader.write.addPriceFeed([link, priceAggregator.linkPriceFeeds.address])
+
+    await perpTrader.write.addPriceFeed([forth, priceAggregator.forthPriceFeeds.address])
+
     console.log("PerpTrader Deployed")
 
-    console.log("PerpTrader: ", perpTrader)
+    console.log("PerpTrader: ", perpTrader.address)
 
     console.log("-------------------------------------------------------------------")
 

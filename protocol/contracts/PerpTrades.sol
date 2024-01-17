@@ -12,7 +12,11 @@ import "hardhat/console.sol";
 contract PerpTrades is ERC4626, Ownable {
 
     struct TraderProfile {
+        address trader;
+        int pnl;
+        uint16 usedLeverage;
         uint16 maxLeverage;
+        uint liquidationFee;
     }
 
     struct PairStruct {
@@ -51,14 +55,11 @@ contract PerpTrades is ERC4626, Ownable {
     using SafeERC20 for IERC20;
 
     uint constant DECIMAL = 10**38;
-
     uint constant public MAX_UTILIZATION_PERCENTAGE = 50;
 
     uint public positionId = 0;
 
-    // store deposits
-
-    uint public deposits;
+    // store collaterals
     uint public collaterals;
     
     uint public totalOpenLongInterest;
@@ -70,16 +71,11 @@ contract PerpTrades is ERC4626, Ownable {
     CollateralBank public immutable collateralBank;
     AggregatorV3Interface public immutable ghoPriceFeeds;
 
-
-    // store user deposits for a given liquidityProvider
-    mapping(address => uint) public myDeposits;
-
     // store user deposits for a given trader
     mapping(address => uint) public myCollateral;
 
     // store positionSize for a given trader
     mapping(address => uint) public myPositionSize;
-
 
     mapping(bytes32 => uint) public openLongInterestInGho;
     mapping(bytes32 => uint) public openShortInterestInGho;
@@ -106,6 +102,10 @@ contract PerpTrades is ERC4626, Ownable {
     uint8 public liquidationFeePercent = 5;
     uint16 public maxLeverage = 500;
 
+
+    mapping(address => bool) hasTraded;
+    address [] traders;
+
     constructor(IERC20 _gho, address _ghoPriceFeeds, string memory _name, string memory _symbol) ERC4626(_gho) ERC20(_name, _symbol) Ownable(msg.sender) {
         collateralBank = new CollateralBank(_gho);
         gho = _gho;
@@ -115,16 +115,12 @@ contract PerpTrades is ERC4626, Ownable {
 
     function deposit(uint256 assets) external returns (uint256) {
         address liquidityProvider = msg.sender;
-        deposits += assets;
-        myDeposits[liquidityProvider] += assets;
         emit DepositLiquidity(liquidityProvider, assets);
         return super.deposit(assets, liquidityProvider);
     }
 
     function withdraw(uint256 assets) external returns (uint256) {
         address liquidityProvider = msg.sender; 
-        deposits -= assets;
-        myDeposits[liquidityProvider] -= assets;
         emit WithdrawLiquidity(liquidityProvider, assets);
         return super.withdraw(assets, liquidityProvider, liquidityProvider); 
     }
@@ -160,6 +156,10 @@ contract PerpTrades is ERC4626, Ownable {
         gho.safeTransferFrom(trader, address(collateralBank), assets);
         collaterals += assets;
         myCollateral[trader] += assets;
+        if (!hasTraded[trader]) {
+            hasTraded[trader] = true;
+            traders.push(trader);
+        }
         emit DepositCollateral(trader, assets);
     }
 
@@ -351,9 +351,44 @@ contract PerpTrades is ERC4626, Ownable {
     }
 
     function maximumRemovableCollateral(address trader) view public {
-        uint leverage = getTraderLeverage(trader);
+        //uint leverage = getTraderLeverage(trader);
         //uint collateral
     }
+
+
+    function getVaultInfo() external view returns (uint, uint, uint) {
+        return (totalAssets(), availableLiquidity(), interestRate);
+    }
+
+    function getLPSharesInGHO(address liquidityProvider) external view returns (uint) {
+        uint lpBalance = IERC20(address(this)).balanceOf(liquidityProvider);
+        if (totalSupply() == 0) return 0;
+        return lpBalance * totalAssets() / totalSupply();
+    }
+
+
+    // unsafe loop
+    function getTradersInfo() external view returns (TraderProfile [] memory) {
+        uint length = traders.length;
+        TraderProfile [] memory traderProfiles = new TraderProfile[](length);
+
+        for (uint i = 0; i < traders.length; i++) {
+            address trader = traders[i];
+            uint16 leverage = uint16(getTraderLeverage(trader));
+            uint16 _maxLeverage = maxLeverage;
+            traderProfiles[i] = TraderProfile({
+                trader: trader,
+                pnl: traderPnL(trader),
+                usedLeverage: leverage,
+                maxLeverage: _maxLeverage,
+                liquidationFee: leverage > _maxLeverage ? calculateLiquidationFee(trader) : 0
+            });
+        }
+
+        return traderProfiles;
+    }
+
+
 
 
     /************************************************************************
