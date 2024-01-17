@@ -168,7 +168,7 @@ describe("PerpTrader", function () {
 
       await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
 
-      const positionOpenedTime = (await time.latest()).toString();
+      const positionOpenedTime = BigInt(await time.latest());
 
       const position = await perpTrader.read.positions([1n])
 
@@ -183,7 +183,6 @@ describe("PerpTrader", function () {
 
       expect(await perpTrader.read.totalOpenLongInterest()).to.be.equal(sizeAmount)
       expect(await perpTrader.read.totalOpenShortInterest()).to.be.equal(0n)
-
 
       expect(await perpTrader.read.openLongInterestInGho([pairKey])).to.be.equal(sizeAmount)
       expect(await perpTrader.read.openShortInterestInGho([pairKey])).to.be.equal(0n)
@@ -206,7 +205,7 @@ describe("PerpTrader", function () {
 
       await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, false])
 
-      const positionOpenedTime = (await time.latest()).toString();
+      const positionOpenedTime = BigInt(await time.latest());
 
       const position = await perpTrader.read.positions([1n])
 
@@ -352,9 +351,6 @@ describe("PerpTrader", function () {
   })
 
 
-
-
-
   describe("Close Position", function () {
 
     it("Should close position with no profit or loss", async() => {
@@ -481,6 +477,43 @@ describe("PerpTrader", function () {
       await expect(perpTrader.read.myPositionIds([user1.account.address, 1n])).rejectedWith("")
 
     })
+
+  })
+
+
+  describe("Liquidate Trader", function () {
+
+    it("Should not be able to Liquidate Trader that is not over Leveraged", async() => {
+
+      const { perpTrader, gho, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
+
+      const pair = { baseCurrency: btc, quoteCurrency: eth }
+
+      await gho.write.approve([perpTrader.address, collateralAmount])
+
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
+
+      await expect(perpTrader.write.liquidateTrader([user1.account.address])).to.be.rejectedWith("CannotLiquidateTrader")
+     
+    })
+
+    it("Should be able to Liquidate Trader that is not over Leveraged", async() => {
+
+      const { perpTrader, gho, btc, btcPriceFeeds, btcInitailPrice, eth, user1 } = await loadFixture(deployAndDepositTest)
+
+      const pair = { baseCurrency: btc, quoteCurrency: eth }
+
+      await gho.write.approve([perpTrader.address, collateralAmount])
+
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
+
+      // decrease BTC Price relative to dollar by 50%
+      await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
+
+      await perpTrader.write.liquidateTrader([user1.account.address])
+     
+    })
+
 
   })
 
