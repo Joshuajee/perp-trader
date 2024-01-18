@@ -10,7 +10,7 @@ const useCurrentChainId = () => {
         return chain.id
     }
 
-    return 11155111
+    return import.meta.env.VITE_CHAIN_ID
 
 }
 
