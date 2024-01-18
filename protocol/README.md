@@ -11,3 +11,12 @@ REPORT_GAS=true npx hardhat test
 npx hardhat node
 npx hardhat run scripts/deploy.ts
 ```
+
+
+0xb0f05d25e41fbc2b52013099ed9616f1206ae21b
+
+// "viem": "1.15.1"
+
+
+
+// 0xdc0c61e97ffcd248dd9b4ebab4dbb5c8d0b62da0

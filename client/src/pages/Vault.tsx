@@ -15,7 +15,19 @@ export default function Vault() {
     const [withdrawalVolume, setWithdrawalVolume] = useState<string | null>(null)
 
 
-    const { data: vaultInfo } = useContractRead({
+    const { data: interestRate }: { data: string } = useContractRead({
+        address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
+        abi: perpAbi,
+        functionName: "interestRate",
+        watch: true,
+        chainId: currentChainId,
+        account: address
+    })
+
+
+    const { data: vaultInfo }: {
+        data: []
+    } = useContractRead({
         address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
         abi: perpAbi,
         functionName: "getVaultInfo",
@@ -23,11 +35,6 @@ export default function Vault() {
         chainId: currentChainId,
         account: address
     })
-
-    console.log(vaultInfo)
-
-
-
 
 
     const approve = async (weiValue) => {
@@ -54,12 +61,28 @@ export default function Vault() {
             address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
             abi: perpAbi,
             functionName: 'deposit',
-            args: [10],
+            args: [weiValue],
+            account: address,
+        })
+        //@ts-ignore
+        const hash = await walletClient.writeContract(request)
+        setDepositVolume(null)
+    }
+
+    const withdraw = async () => {
+        const weiValue = parseEther(`${withdrawalVolume}`, "wei")
+
+        const { request } = await publicClient.simulateContract({
+            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+            abi: perpAbi,
+            functionName: 'withdraw',
+            args: [weiValue],
             account: address,
         })
         //@ts-ignore
         const hash = await walletClient.writeContract(request)
         console.log(hash, "transaction completed")
+        setWithdrawalVolume(null)
     }
 
     return (
@@ -67,16 +90,19 @@ export default function Vault() {
             <div className='w-[90%] max-w-[500px] h-24 rounded-xl bg-primary_4 m-auto flex  items-center'>
                 <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Total Value</p>
-                    <p className='text-lg text-white text-center'>$1.20m</p>
+                    {/* @ts-ignore */}
+                    <p className='text-lg text-white text-center'>GHO {vaultInfo.length > 0 ? Number(formatEther(vaultInfo[0])) : ""}</p>
                 </div>
                 <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Available Funds</p>
-                    <p className='text-lg text-white text-center'>$1.20m</p>
+                    {/* @ts-ignore */}
+                    <p className='text-lg text-white text-center'>GHO {vaultInfo.length > 0 ? Number(formatEther(vaultInfo[1])) : ""}</p>
                 </div>
 
                 <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Interest Rate</p>
-                    <p className='text-lg text-white text-center'>1.10%</p>
+                    {/* @ts-ignore */}
+                    <p className='text-lg text-white text-center'>{vaultInfo.length > 0 ? vaultInfo[2] : ""}%</p>
                 </div>
             </div>
             <form className='w-[90%] max-w-[500px] p-3 rounded-xl bg-primary_4 m-auto flex flex-col  gap-10 pb-10'>
@@ -97,7 +123,7 @@ export default function Vault() {
                         <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
                     </div>
 
-                    <button type="button" className="bg-purple-700 text-white w-full py-3 rounded-lg mt-2">Withdraw </button>
+                    <button onClick={withdraw} type="button" className="bg-purple-700 text-white w-full py-3 rounded-lg mt-2">Withdraw </button>
                 </div>
             </form>
         </div>

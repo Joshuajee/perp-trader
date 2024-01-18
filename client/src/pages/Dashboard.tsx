@@ -36,16 +36,7 @@ function Dashboard() {
                             {tab === 0 && <MakePosition />}
                             {tab === 1 && <DepositCollateral />}
                         </div>
-                        <div className="pb-3 border-b border-primary_2">
-                            <div className="flex justify-between ">
-                                <p className="text-md">Pool</p>
-                                <p className="text-nd text-white">BTC-GHO</p>
-                            </div>
-                            <div className="flex justify-between  gap-2">
-                                <p className="text-md">Collateral In</p>
-                                <p className="text-md text-white flex items-center gap-1 hover:text-secondary_1 cursor-pointer ">USDC <FaChevronDown size={18} className="pt-1" /> </p>
-                            </div>
-                        </div>
+
                         <div className="">
                             <div className="flex justify-between ">
                                 <p className="text-md">Leverage</p>

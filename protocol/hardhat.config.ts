@@ -6,11 +6,13 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// const PRIVATE_KEY  = String(process.env.PRIVATE_KEY)
+
 const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.20",
+        version: "0.8.10",
         settings: {
           optimizer: {
             enabled: true,
@@ -42,18 +44,15 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 1337, // Customize the chain ID here
     },
+    sepolia: {
+      url: "https://sepolia.drpc.org",
+      // accounts: [ PRIVATE_KEY ]
+    },
+    mumbai: {
+      url: "https://polygon-mumbai.g.alchemy.com/v2/1yHVzG9cEm8g0IJKQA0VO-nczdGW4NgO",
+      // accounts: [ PRIVATE_KEY ]
+    },
   },
-
-  // networks: {
-  // 	mumbai: {
-  // 		url: 'https://polygon-mumbai.g.alchemy.com/v2/1yHVzG9cEm8g0IJKQA0VO-nczdGW4NgO',
-  // 		accounts: [ PRIVATE_KEY ]
-  // 	},
-  // 	fuji: {
-  // 		url: 'https://aged-wider-needle.avalanche-testnet.quiknode.pro/d0313dfde220dd7912c814a6fa97a0620e95d924/ext/bc/C/rpc/',
-  // 		accounts: [ PRIVATE_KEY ]
-  // 	},
-  // },
 };
 
 export default config;

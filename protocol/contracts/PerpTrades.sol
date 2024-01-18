@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -13,6 +13,7 @@ contract PerpTrades is ERC4626, Ownable {
 
     struct TraderProfile {
         address trader;
+        uint collateral;
         int pnl;
         uint16 usedLeverage;
         uint16 maxLeverage;
@@ -40,6 +41,7 @@ contract PerpTrades is ERC4626, Ownable {
     error TraderOverLeveraged(address trader, uint maxLeverage, uint leverage);
     error CannotWithdrawAboveAvailableLiquidity(uint amount, uint availableLiquidity);
     error CannotLiquidateTrader(uint traderLeverage, uint maxLeverage);
+    error LiquidityNotEnoughToSupportPosition();
 
     event DepositLiquidity(address indexed liquidityProvider, uint assets);
     event DepositCollateral(address indexed liquidityProvider, uint assets);
@@ -68,7 +70,7 @@ contract PerpTrades is ERC4626, Ownable {
     uint public totalShortInterestInTokens;
 
     IERC20 public immutable gho;
-    CollateralBank public immutable collateralBank;
+    CollateralBank public  collateralBank;
     AggregatorV3Interface public immutable ghoPriceFeeds;
 
     // store user deposits for a given trader
@@ -106,23 +108,25 @@ contract PerpTrades is ERC4626, Ownable {
     mapping(address => bool) hasTraded;
     address [] traders;
 
-    constructor(IERC20 _gho, address _ghoPriceFeeds, string memory _name, string memory _symbol) ERC4626(_gho) ERC20(_name, _symbol) Ownable(msg.sender) {
+    constructor(IERC20 _gho, address _ghoPriceFeeds, string memory _name, string memory _symbol) ERC4626(_gho) ERC20(_name, _symbol) {
         collateralBank = new CollateralBank(_gho);
         gho = _gho;
         ghoPriceFeeds = AggregatorV3Interface(_ghoPriceFeeds);
     }
 
 
-    function deposit(uint256 assets) external returns (uint256) {
+    function deposit(uint256 assets) external {
         address liquidityProvider = msg.sender;
+
+        super.deposit(assets, liquidityProvider);
+
         emit DepositLiquidity(liquidityProvider, assets);
-        return super.deposit(assets, liquidityProvider);
     }
 
-    function withdraw(uint256 assets) external returns (uint256) {
+    function withdraw(uint256 assets) external {
         address liquidityProvider = msg.sender; 
+        super.withdraw(assets, liquidityProvider, liquidityProvider); 
         emit WithdrawLiquidity(liquidityProvider, assets);
-        return super.withdraw(assets, liquidityProvider, liquidityProvider); 
     }
 
 
@@ -347,6 +351,7 @@ contract PerpTrades is ERC4626, Ownable {
         if (currentValueOfAssets > totalDepositedAssets) {
             return totalDepositedAssets - totalOpenInterest;
         } 
+        if (currentValueOfAssets < totalOpenInterest) return 0;
         return currentValueOfAssets - totalOpenInterest;
     }
 
@@ -366,6 +371,12 @@ contract PerpTrades is ERC4626, Ownable {
         return lpBalance * totalAssets() / totalSupply();
     }
 
+    function maxUtilizationPercentage() public view returns(bool, uint) {
+        uint totalOpenInterest = totalOpenLongInterest + totalOpenShortInterest;
+        uint maxAllowed = IERC20(address(gho)).balanceOf(address(this)) * MAX_UTILIZATION_PERCENTAGE;
+        return (totalOpenInterest < maxAllowed, maxAllowed);
+    }
+
 
     // unsafe loop
     function getTradersInfo() external view returns (TraderProfile [] memory) {
@@ -378,6 +389,7 @@ contract PerpTrades is ERC4626, Ownable {
             uint16 _maxLeverage = maxLeverage;
             traderProfiles[i] = TraderProfile({
                 trader: trader,
+                collateral: myCollateral[trader],
                 pnl: traderPnL(trader),
                 usedLeverage: leverage,
                 maxLeverage: _maxLeverage,
@@ -407,7 +419,8 @@ contract PerpTrades is ERC4626, Ownable {
             openShortInterestIntokens[pairKey] += _amount;  
         }
         myPositionSize[msg.sender] += _size;
-
+        (bool canOpen, ) = maxUtilizationPercentage();
+        if (!canOpen) revert LiquidityNotEnoughToSupportPosition();
     }
 
     function _reducePositions(PairStruct memory _pair, uint _size, uint _amount, bool _isLong) internal {
@@ -464,17 +477,18 @@ contract PerpTrades is ERC4626, Ownable {
      *                            ERC4646 Overrides                         *
      ************************************************************************/
 
-    function totalAssets() public view override returns (uint) {
-        int pnl = totalPnL();
-        uint _totalAssets = super.totalAssets();
+    // function totalAssets() public view override returns (uint) {
+    //     int pnl = totalPnL();
+    //     uint _totalAssets = super.totalAssets();
 
-        if (pnl > -1) {
-            return _totalAssets - uint(pnl);
-        }
+    //     if (pnl > 0) {
+    //         if (_totalAssets < uint(pnl)) return 1;
+    //         return _totalAssets - uint(pnl);
+    //     }
 
-        return _totalAssets + uint(-1 * pnl);
+    //     return _totalAssets + uint(-1 * pnl);
   
-    }
+    // }
 
 
     function _withdraw(
