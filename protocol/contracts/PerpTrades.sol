@@ -491,33 +491,33 @@ contract PerpTrades is ERC4626, Ownable {
     // }
 
 
-    function _withdraw(
-        address caller,
-        address receiver,
-        address owner,
-        uint256 assets,
-        uint256 shares
-    ) internal override {
+    // function _withdraw(
+    //     address caller,
+    //     address receiver,
+    //     address owner,
+    //     uint256 assets,
+    //     uint256 shares
+    // ) internal override {
 
-        if (caller != owner) {
-            _spendAllowance(owner, caller, shares);
-        }
+    //     if (caller != owner) {
+    //         _spendAllowance(owner, caller, shares);
+    //     }
 
-        uint _availableLiquidity = availableLiquidity();
-        if (assets < _availableLiquidity) revert CannotWithdrawAboveAvailableLiquidity(assets, _availableLiquidity);
+    //     uint _availableLiquidity = availableLiquidity();
+    //     if (assets < _availableLiquidity) revert CannotWithdrawAboveAvailableLiquidity(assets, _availableLiquidity);
 
-        // If _asset is ERC-777, `transfer` can trigger a reentrancy AFTER the transfer happens through the
-        // `tokensReceived` hook. On the other hand, the `tokensToSend` hook, that is triggered before the transfer,
-        // calls the vault, which is assumed not malicious.
-        //
-        // Conclusion: we need to do the transfer after the burn so that any reentrancy would happen after the
-        // shares are burned and after the assets are transferred, which is a valid state.
-        _burn(owner, shares);
+    //     // If _asset is ERC-777, `transfer` can trigger a reentrancy AFTER the transfer happens through the
+    //     // `tokensReceived` hook. On the other hand, the `tokensToSend` hook, that is triggered before the transfer,
+    //     // calls the vault, which is assumed not malicious.
+    //     //
+    //     // Conclusion: we need to do the transfer after the burn so that any reentrancy would happen after the
+    //     // shares are burned and after the assets are transferred, which is a valid state.
+    //     _burn(owner, shares);
 
-        SafeERC20.safeTransfer(IERC20(asset()), receiver, assets);
+    //     SafeERC20.safeTransfer(IERC20(asset()), receiver, assets);
 
-        emit Withdraw(caller, receiver, owner, assets, shares);
-    }
+    //     emit Withdraw(caller, receiver, owner, assets, shares);
+    // }
 
 
 
