@@ -36,6 +36,7 @@ contract PerpTrades is ERC4626, Ownable {
     }
 
     struct PositionInfoStruct {
+        uint positionId;
         PositionStruct position;
         int pnl;
     }
@@ -47,6 +48,7 @@ contract PerpTrades is ERC4626, Ownable {
     error CannotWithdrawAboveAvailableLiquidity(uint amount, uint availableLiquidity);
     error CannotLiquidateTrader(uint traderLeverage, uint maxLeverage);
     error LiquidityNotEnoughToSupportPosition();
+    error CannotClosePositionYouDonotOwn();
 
     event DepositLiquidity(address indexed liquidityProvider, uint assets);
     event DepositCollateral(address indexed liquidityProvider, uint assets);
@@ -144,7 +146,7 @@ contract PerpTrades is ERC4626, Ownable {
         uint [] memory _positionIds = myPositionIds[trader];
         for (uint i = 0; i < _positionIds.length; i++) {
             uint _positionId = _positionIds[i];
-            closePosition(_positionId);
+            _closePosition(_positionId);
             uint _leverage = getTraderLeverage(trader);
             emit LiquidatePosition(liquidator, trader, positionId);
             if (_leverage < maxLeverage) break; 
@@ -203,46 +205,9 @@ contract PerpTrades is ERC4626, Ownable {
     }
 
 
-    function closePosition(uint _positionId) public  {
-        
-        PositionStruct memory position = positions[_positionId];
-        positions[_positionId].isOpen = false;
-
-        int pnl = positionPnl(_positionId);
-
-        if (pnl > 0) {
-            uint profit = uint(pnl);
-            gho.safeTransfer(address(collateralBank), profit);
-            myCollateral[position.trader] += profit; 
-            collaterals += profit;
-        } else if (pnl < 0) {
-            uint loss = uint(-1 * pnl);
-            if (loss > myCollateral[position.trader]) {
-                collateralBank.withdraw(address(this), myCollateral[position.trader]);
-                collaterals -= myCollateral[position.trader];
-                myCollateral[position.trader] = 0;
-            } else {
-                collateralBank.withdraw(address(this), loss);
-                myCollateral[position.trader] -= loss;
-                collaterals -= loss;
-            }
-        }
-
-        _reducePositions(position.pair, position.size, position.value, position.isLong);
-
-        uint [] memory positionIds = myPositionIds[position.trader];
-
-        for (uint i = 0; i < positionIds.length; ++i) {
-            if (positionIds[i] == positionId) {
-                myPositionIds[position.trader][i] = positionIds[positionIds.length - 1];
-                myPositionIds[position.trader].pop();
-                break;
-            }
-        }
-
-
-        emit PositionClosed(positionId, position.pair, position.trader, position.size);
-        
+    function closePosition(uint _positionId) external  {
+        if (msg.sender != positions[_positionId].trader) revert CannotClosePositionYouDonotOwn();
+        _closePosition(_positionId);
     }
 
 
@@ -401,6 +366,7 @@ contract PerpTrades is ERC4626, Ownable {
         for (uint i = 0; i < length; i++) {
             uint _positionId = _positionIds[i];
             _positions[i] = PositionInfoStruct({
+                positionId: _positionId,
                 position: positions[_positionId],
                 pnl: positionPnl(_positionId)
             });
@@ -467,6 +433,48 @@ contract PerpTrades is ERC4626, Ownable {
             openShortInterestIntokens[pairKey] -= _amount;  
         }
         myPositionSize[msg.sender] -= _size;
+    }
+
+    function _closePosition(uint _positionId) internal  {
+        
+        PositionStruct memory position = positions[_positionId];
+        positions[_positionId].isOpen = false;
+
+        int pnl = positionPnl(_positionId);
+
+        if (pnl > 0) {
+            uint profit = uint(pnl);
+            gho.safeTransfer(address(collateralBank), profit);
+            myCollateral[position.trader] += profit; 
+            collaterals += profit;
+        } else if (pnl < 0) {
+            uint loss = uint(-1 * pnl);
+            if (loss > myCollateral[position.trader]) {
+                collateralBank.withdraw(address(this), myCollateral[position.trader]);
+                collaterals -= myCollateral[position.trader];
+                myCollateral[position.trader] = 0;
+            } else {
+                collateralBank.withdraw(address(this), loss);
+                myCollateral[position.trader] -= loss;
+                collaterals -= loss;
+            }
+        }
+
+        _reducePositions(position.pair, position.size, position.value, position.isLong);
+
+        uint [] memory positionIds = myPositionIds[position.trader];
+
+        for (uint i = 0; i < positionIds.length; ++i) {
+            if (positionIds[i] == positionId) {
+                myPositionIds[position.trader][i] = positionIds[positionIds.length - 1];
+                myPositionIds[position.trader].pop();
+                break;
+            }
+        }
+
+
+        emit PositionClosed(positionId, position.pair, position.trader, position.size);
+        
     }
 
 
