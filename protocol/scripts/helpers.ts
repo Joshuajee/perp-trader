@@ -13,8 +13,8 @@ export const depositLiquidity = async(_gho: Address, _perpTrader: Address,  amou
 
     const gho = await viem.getContractAt("MockERC20", _gho)
 
-    await gho.write.approve([perpTrader.address, amount])
-
+    await gho.write.approve([_perpTrader, amount])
+    
     await perpTrader.write.deposit([amount])
 
 }

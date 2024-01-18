@@ -10,11 +10,11 @@ import { deployPriceAggregator, deployTokens } from "../scripts/mockHelper";
 
 describe("PerpTrader", function () {
 
-  const amount = parseEther("10000", "wei")
+  const amount = parseEther("100", "wei")
 
-  const sizeAmount = parseEther("100", "wei")
+  const sizeAmount = parseEther("10", "wei")
 
-  const collateralAmount = parseEther("10", "wei")
+  const collateralAmount = parseEther("1", "wei")
 
   async function deployTest() {
 

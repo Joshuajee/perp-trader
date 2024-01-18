@@ -1,5 +1,5 @@
-// SPDX-License-Identifier: UNLICENSED
-pragma solidity ^0.8.19;
+// SPDX-License-Identifier: MIT
+pragma solidity 0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -14,7 +14,7 @@ contract CollateralBank is Ownable {
 
     IERC20 gho;
 
-    constructor(IERC20 _gho) Ownable(msg.sender) {
+    constructor(IERC20 _gho) {
         gho = _gho;
     }
 
