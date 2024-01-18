@@ -53,7 +53,7 @@ function Trades() {
                     <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">Action</div>
                 </div>
                 {
-                    tradersInfo.map((trades, idx) => (
+                    tradersInfo ? (tradersInfo.map((trades, idx) => (
                         <div className="flex items-center border-t border-primary_2 h-10">
 
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{formatEther(trades.collateral)}</div>
@@ -65,7 +65,9 @@ function Trades() {
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center"><button onClick={() => { liquidate(trades.trader) }} className=" w-fit px-3 py-2 flex items-center text-xs  bg-red-600 text-white  ">Liquidate</button></div>
 
                         </div>
-                    ))
+                    ))) : (
+                        <></>
+                    )
                 }
             </div>
         </div>

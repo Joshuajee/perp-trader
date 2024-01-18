@@ -91,18 +91,18 @@ export default function Vault() {
                 <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Total Value</p>
                     {/* @ts-ignore */}
-                    <p className='text-lg text-white text-center'>GHO {vaultInfo.length > 0 ? Number(formatEther(vaultInfo[0])) : ""}</p>
+                    <p className='text-lg text-white text-center'>GHO {vaultInfo ? Number(formatEther(vaultInfo[0])) : ""}</p>
                 </div>
                 <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Available Funds</p>
                     {/* @ts-ignore */}
-                    <p className='text-lg text-white text-center'>GHO {vaultInfo.length > 0 ? Number(formatEther(vaultInfo[1])) : ""}</p>
+                    <p className='text-lg text-white text-center'>GHO {vaultInfo ? Number(formatEther(vaultInfo[1])) : ""}</p>
                 </div>
 
                 <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Interest Rate</p>
                     {/* @ts-ignore */}
-                    <p className='text-lg text-white text-center'>{vaultInfo.length > 0 ? vaultInfo[2] : ""}%</p>
+                    <p className='text-lg text-white text-center'>{vaultInfo > 0 ? vaultInfo[2] : ""}%</p>
                 </div>
             </div>
             <form className='w-[90%] max-w-[500px] p-3 rounded-xl bg-primary_4 m-auto flex flex-col  gap-10 pb-10'>

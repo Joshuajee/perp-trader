@@ -6,9 +6,11 @@ const useCurrentChainId = () => {
     const { chain } = useNetwork()
 
 
-    return chain.id
+    if (chain) {
+        return chain.id
+    }
 
-
+    return 11155111
 
 }
 
