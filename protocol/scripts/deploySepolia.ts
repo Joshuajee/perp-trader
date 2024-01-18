@@ -1,6 +1,7 @@
 import { deployPriceAggregator, deployTokens } from "./mockHelper";
 import { deploy, depositLiquidity, tokenSymbols } from "./helpers";
 import { parseEther } from "viem";
+import { viem } from "hardhat";
 
 const amount = parseEther("100", "wei")
 
@@ -41,7 +42,11 @@ async function main() {
 
   console.log("-------------------------------------------------------------------")
 
-  const { perpTrader } = await deploy(gho, ghoPriceFeeds)
+  const perpTrader = await viem.deployContract("PerpTrades", [gho, ghoPriceFeeds, "aGho", "aGho"])
+
+  console.log("Perp Trader ", perpTrader.address)
+  
+  //const { perpTrader } = await deploy(gho, ghoPriceFeeds)
 
   await perpTrader.write.addPriceFeed([btc, btcPriceFeeds])
 

@@ -4,6 +4,8 @@
     "deploy": "hardhat run --network sepolia scripts/deploy.ts",
     "deploy-local": "hardhat run --network localhost scripts/deployLocal.ts",
     "deploy-sepolia": "hardhat run --network sepolia scripts/deploySepolia.ts",
+    "deploy-mumbai": "hardhat run --network mumbai scripts/deploySepolia.ts",
+    "deposit-sepolia": "hardhat run --network sepolia scripts/depositSepolia.ts",
     "coverage": "hardhat coverage"
   },
   "devDependencies": {
@@ -22,11 +24,11 @@
     "solidity-coverage": "^0.8.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3",
-    "viem": "^1.15.1"
+    "viem": "1.15.1"
   },
   "dependencies": {
-    "@chainlink/contracts": "^0.8.0",
-    "@openzeppelin/contracts": "^5.0.1",
+    "@chainlink/contracts": "0.8.0",
+    "@openzeppelin/contracts": "^4.0.1",
     "dotenv": "^16.3.1"
   }
 }

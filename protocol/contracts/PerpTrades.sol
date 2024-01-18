@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.19;
+pragma solidity ^0.8.10;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
@@ -70,7 +70,7 @@ contract PerpTrades is ERC4626, Ownable {
     uint public totalShortInterestInTokens;
 
     IERC20 public immutable gho;
-    CollateralBank public immutable collateralBank;
+    CollateralBank public  collateralBank;
     AggregatorV3Interface public immutable ghoPriceFeeds;
 
     // store user deposits for a given trader
@@ -108,7 +108,7 @@ contract PerpTrades is ERC4626, Ownable {
     mapping(address => bool) hasTraded;
     address [] traders;
 
-    constructor(IERC20 _gho, address _ghoPriceFeeds, string memory _name, string memory _symbol) ERC4626(_gho) ERC20(_name, _symbol) Ownable(msg.sender) {
+    constructor(IERC20 _gho, address _ghoPriceFeeds, string memory _name, string memory _symbol) ERC4626(_gho) ERC20(_name, _symbol) {
         collateralBank = new CollateralBank(_gho);
         gho = _gho;
         ghoPriceFeeds = AggregatorV3Interface(_ghoPriceFeeds);

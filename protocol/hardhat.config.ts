@@ -12,16 +12,7 @@ const config: HardhatUserConfig = {
   solidity: {
     compilers: [
       {
-        version: "0.8.20",
-        settings: {
-          optimizer: {
-            enabled: true,
-            runs: 200,
-          },
-        },
-      },
-      {
-        version: "0.8.18",
+        version: "0.8.10",
         settings: {
           optimizer: {
             enabled: true,
@@ -54,9 +45,13 @@ const config: HardhatUserConfig = {
       chainId: 1337, // Customize the chain ID here
     },
     sepolia: {
-  		url: 'https://eth-sepolia.g.alchemy.com/v2/o9-aEsEyIqQ2kyFIYiOzu35FTdI9A8DH',
+  		url: 'https://sepolia.drpc.org',
   		accounts: [ PRIVATE_KEY ]
   	},
+    mumbai: {
+			url: 'https://polygon-mumbai.g.alchemy.com/v2/1yHVzG9cEm8g0IJKQA0VO-nczdGW4NgO',
+			accounts: [ PRIVATE_KEY ]
+		},
   },
 };
 

@@ -12,9 +12,9 @@ describe("PerpTrader", function () {
 
   const amount = parseEther("100", "wei")
 
-  const sizeAmount = parseEther("100", "wei")
+  const sizeAmount = parseEther("10", "wei")
 
-  const collateralAmount = parseEther("10", "wei")
+  const collateralAmount = parseEther("1", "wei")
 
   async function deployTest() {
 

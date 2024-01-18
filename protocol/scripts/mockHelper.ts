@@ -6,22 +6,22 @@ export async function deployPriceAggregator() {
 
     // All the price here are quoted in USD
 
-    const INITIAL_PRICE = 200000000000000000000n
+    const INITIAL_PRICE = 97906595n
 
     const ghoDecimal = 8;
-    const ghoInitailPrice = INITIAL_PRICE
+    const ghoInitailPrice = 4283849655582n
 
     const btcDecimal = 8;
-    const btcInitailPrice = INITIAL_PRICE
+    const btcInitailPrice = 253641999999n;
 
     const ethDecimal = 8;
-    const ethInitailPrice = INITIAL_PRICE
+    const ethInitailPrice = 339925673n;
 
     const linkDecimal = 8;
-    const linkInitailPrice = INITIAL_PRICE
+    const linkInitailPrice = 97906595n;
 
     const forthDecimal = 8;
-    const forthInitailPrice = INITIAL_PRICE
+    const forthInitailPrice = 339925673n;
 
     const ghoPriceFeeds = await viem.deployContract("MockV3Aggregator", [ghoDecimal, ghoInitailPrice])
 
