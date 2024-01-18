@@ -5,8 +5,10 @@ import {
 import { expect } from "chai";
 import { viem } from "hardhat";
 import { checksumAddress, parseEther, parseGwei } from "viem";
-import { calculatePrice, deploy,  depositLiquidity } from "../scripts/helpers";
-import { deployPriceAggregator, deployTokens } from "../scripts/mockHelper";
+import { deploy,  depositLiquidity, tokenSymbols } from "../scripts/helpers";
+import { calculatePrice, deployPriceAggregator, deployTokens } from "../scripts/mockHelper";
+
+
 
 describe("PerpTrader", function () {
 
@@ -20,17 +22,19 @@ describe("PerpTrader", function () {
 
     const [user1, user2] = await viem.getWalletClients();
 
-    const tokens  = await deployTokens()
+    const gho = await viem.deployContract("MockERC20", ["aGho", "aGho"])
+
+    const tokens  = tokenSymbols()
 
     const priceAggregator = await deployPriceAggregator()
 
-    const { perpTrader } = await deploy(tokens.gho.address, priceAggregator.ghoPriceFeeds.address)
+    const { perpTrader } = await deploy(gho.address, priceAggregator.ghoPriceFeeds.address)
 
     await perpTrader.write.addPriceFeed([tokens.btc, priceAggregator.btcPriceFeeds.address])
 
     await perpTrader.write.addPriceFeed([tokens.eth, priceAggregator.ethPriceFeeds.address])
     
-    return { perpTrader, user1, user2, ...priceAggregator, ...tokens }
+    return { perpTrader, gho, user1, user2, ...priceAggregator, ...tokens }
 
   }
 
@@ -51,8 +55,6 @@ describe("PerpTrader", function () {
     return { ...deploy }
 
   }
-
-
 
   describe("Deposits", function () {
 
@@ -77,7 +79,6 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.totalAssets()).to.be.equal(amount)
 
     })
-
 
 
     it("Should be able to withdraw amount deposited to the protocol", async() => {
@@ -161,7 +162,7 @@ describe("PerpTrader", function () {
 
     it("Should be able to open Position long position", async() => {
 
-      const { perpTrader, gho, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
+      const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, ethPriceFeeds } = await loadFixture(deployAndDepositTest)
 
       const pair = {baseCurrency: btc, quoteCurrency: eth }
 
@@ -175,7 +176,7 @@ describe("PerpTrader", function () {
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
-      const price = calculatePrice()
+      const price = await calculatePrice(sizeAmount, btcPriceFeeds.address, ethPriceFeeds.address)
 
       expect(position).deep.be.equal([
         checksumAddress(user1.account.address), pair,
@@ -201,7 +202,7 @@ describe("PerpTrader", function () {
 
     it("Should be able to open Position short position", async() => {
 
-      const { perpTrader, gho, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
+      const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, ethPriceFeeds } = await loadFixture(deployAndDepositTest)
 
       const pair = {baseCurrency: btc, quoteCurrency: eth}
 
@@ -215,7 +216,7 @@ describe("PerpTrader", function () {
 
       const pairKey = await perpTrader.read.getPairKey([pair])
 
-      const price = calculatePrice()
+      const price = await calculatePrice(sizeAmount, btcPriceFeeds.address, ethPriceFeeds.address)
 
       expect(position).deep.be.equal([
         checksumAddress(user1.account.address), pair, sizeAmount,
@@ -432,7 +433,7 @@ describe("PerpTrader", function () {
 
       const interest = await perpTrader.read.calculateInterest([sizeAmount, positionOpenedTime])
 
-      const collateral = (110n * 10n ** 18n) - interest;
+      const collateral = collateralAmount + (collateralAmount / 2n) - interest;
 
       expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(collateral)
       expect(await perpTrader.read.collaterals()).to.be.equal(collateral)
@@ -552,7 +553,7 @@ describe("PerpTrader", function () {
 
       const interest = await perpTrader.read.calculateInterest([sizeAmount, positionOpenedTime])
 
-      const collateral = (60n * 10n ** 18n) - interest;
+      const collateral = (6n * 10n ** 18n) - interest + 1n;
 
       expect(await gho.read.balanceOf([await perpTrader.read.getCollateralBankAddress()])).to.be.equal(collateral)
       expect(await perpTrader.read.collaterals()).to.be.equal(collateral)
@@ -656,8 +657,9 @@ describe("PerpTrader", function () {
 
       console.log(await perpTrader.read.getTradersInfo())
 
-
       console.log(await perpTrader.read.getVaultInfo())
+
+      console.log(await perpTrader.read.getTraderPositions([user1.account.address]))
 
     })
 

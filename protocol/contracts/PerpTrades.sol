@@ -35,6 +35,11 @@ contract PerpTrades is ERC4626, Ownable {
         bool isOpen;
     }
 
+    struct PositionInfoStruct {
+        PositionStruct position;
+        int pnl;
+    }
+
     error PairAlreadyExist();
     error PairNotSupported(PairStruct pair);
     error MaximumNumberOfPairReached();
@@ -241,6 +246,15 @@ contract PerpTrades is ERC4626, Ownable {
     }
 
 
+    function increasePositionSize(uint id,  uint inc) external {
+        PositionStruct storage position = positions[id];
+        position.size += inc;
+        position.value = getPairPrice(position.pair) * position.size;
+        _updatePositions(position.pair, position.size, position.value, position.isLong);
+        emit PositionSizeIncrease(id, inc);
+    }
+
+
     /************************************************************************
      *                          Public View Functions                       *
      ************************************************************************/
@@ -375,6 +389,24 @@ contract PerpTrades is ERC4626, Ownable {
         uint totalOpenInterest = totalOpenLongInterest + totalOpenShortInterest;
         uint maxAllowed = IERC20(address(gho)).balanceOf(address(this)) * MAX_UTILIZATION_PERCENTAGE;
         return (totalOpenInterest < maxAllowed, maxAllowed);
+    }
+
+
+    function getTraderPositions(address trader) external view returns (PositionInfoStruct[] memory) {
+        
+        uint [] memory _positionIds = myPositionIds[trader];
+        uint length = _positionIds.length;
+        PositionInfoStruct [] memory _positions = new PositionInfoStruct[](length);
+
+        for (uint i = 0; i < length; i++) {
+            uint _positionId = _positionIds[i];
+            _positions[i] = PositionInfoStruct({
+                position: positions[_positionId],
+                pnl: positionPnl(_positionId)
+            });
+        }
+
+        return _positions;
     }
 
 
