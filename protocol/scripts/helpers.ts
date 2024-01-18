@@ -1,11 +1,17 @@
 import { viem } from "hardhat"
 import { Address } from "viem"
 
+export type CurrencyType = "gho" | "btc" | "eth" | "link" | "forth"
+
+export interface PairInterface {
+    baseCurrency: string,
+    quoteCurrency: string
+}
+
 export const deploy = async (gho: Address, ghoPriceFeeds: Address) => {
     const perpTrader = await viem.deployContract("PerpTrades", [gho, ghoPriceFeeds, "aGho", "aGho"])
     return {perpTrader}
 }
-
 
 export const depositLiquidity = async(_gho: Address, _perpTrader: Address,  amount: bigint) => {
 
@@ -17,11 +23,6 @@ export const depositLiquidity = async(_gho: Address, _perpTrader: Address,  amou
     
     await perpTrader.write.deposit([amount])
 
-}
-
-
-export const calculatePrice = () => {
-    return 10000000000000000000000000000000000000000000000000000000000n
 }
 
 

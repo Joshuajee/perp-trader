@@ -1,12 +1,12 @@
 import { viem } from "hardhat"
+import { CurrencyType, PairInterface } from "./helpers";
+import { Address } from "viem";
 
 export const DECIMAL = 10n ** 38n
 
 export async function deployPriceAggregator() {
 
     // All the price here are quoted in USD
-
-    const INITIAL_PRICE = 97906595n
 
     const ghoDecimal = 8;
     const ghoInitailPrice = 4283849655582n
@@ -45,17 +45,26 @@ export async function deployPriceAggregator() {
 
 export async function deployTokens() {
 
-    const gho = await viem.deployContract("MockERC20", ["gho", "gho"])
+    const gho = await viem.deployContract("MockERC20", ["aGho", "aGho"])
 
-    const ghoToken = "gho"
+    return { gho }
+}
 
-    const btc = "btc"
+export const calculatePrice = async (amount: bigint, baseCurrencyAddress: Address, quoteCurrencyAddress: Address) => {
+    
+    const baseCurrency =  await viem.getContractAt("MockV3Aggregator", baseCurrencyAddress)
+    const quoteCurrency =  await viem.getContractAt("MockV3Aggregator", quoteCurrencyAddress)
 
-    const eth = "eth"
+    const basePrice = await baseCurrency.read.latestAnswer()
+    const quotePrice = await quoteCurrency.read.latestAnswer()
 
-    const link = "link"
+    return (basePrice * DECIMAL / quotePrice) * amount
+}
 
-    const forth = "forth"
 
-    return { gho, ghoToken, btc, eth, link, forth }
+export const selectPriceFeeds = (currency: CurrencyType) => {
+
+
+
+    return 0
 }

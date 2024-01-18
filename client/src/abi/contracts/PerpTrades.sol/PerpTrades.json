@@ -1004,6 +1004,86 @@
     "type": "function"
   },
   {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "trader",
+        "type": "address"
+      }
+    ],
+    "name": "getTraderPositions",
+    "outputs": [
+      {
+        "components": [
+          {
+            "components": [
+              {
+                "internalType": "address",
+                "name": "trader",
+                "type": "address"
+              },
+              {
+                "components": [
+                  {
+                    "internalType": "string",
+                    "name": "baseCurrency",
+                    "type": "string"
+                  },
+                  {
+                    "internalType": "string",
+                    "name": "quoteCurrency",
+                    "type": "string"
+                  }
+                ],
+                "internalType": "struct PerpTrades.PairStruct",
+                "name": "pair",
+                "type": "tuple"
+              },
+              {
+                "internalType": "uint256",
+                "name": "size",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "value",
+                "type": "uint256"
+              },
+              {
+                "internalType": "uint256",
+                "name": "openedAt",
+                "type": "uint256"
+              },
+              {
+                "internalType": "bool",
+                "name": "isLong",
+                "type": "bool"
+              },
+              {
+                "internalType": "bool",
+                "name": "isOpen",
+                "type": "bool"
+              }
+            ],
+            "internalType": "struct PerpTrades.PositionStruct",
+            "name": "position",
+            "type": "tuple"
+          },
+          {
+            "internalType": "int256",
+            "name": "pnl",
+            "type": "int256"
+          }
+        ],
+        "internalType": "struct PerpTrades.PositionInfoStruct[]",
+        "name": "",
+        "type": "tuple[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
     "inputs": [],
     "name": "getTradersInfo",
     "outputs": [
@@ -1118,6 +1198,24 @@
         "type": "bool"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "inc",
+        "type": "uint256"
+      }
+    ],
+    "name": "increasePositionSize",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
