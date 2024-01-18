@@ -1,13 +1,47 @@
 import { GoGraph } from "react-icons/go";
 import { Balances, DepositCollateral, MakePosition, Positions, PriceSummary } from "@components/Dashboard";
-import { FaChevronDown } from "react-icons/fa";
+import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 import { TbPigMoney } from "react-icons/tb";
 import TradingViewWidget from "@components/Dashboard/TradingViewWidget";
 import { useState } from "react";
+import { useAccount, useContractRead } from "wagmi";
+import useCurrentChainId from "@hooks/useCurrentChainId";
 
 
 function Dashboard() {
     const [tab, setTab] = useState<number>(0)
+    const { address } = useAccount();
+    const currentChainId = useCurrentChainId()
+
+
+    const { data: leverage } = useContractRead({
+        address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
+        abi: perpAbi,
+        functionName: "getTraderLeverage",
+        args: [address],
+        watch: true,
+        chainId: currentChainId
+    })
+
+
+    const { data: maxLeverage } = useContractRead({
+        address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
+        abi: perpAbi,
+        functionName: "maxLeverage",
+        watch: true,
+        chainId: currentChainId
+    })
+
+    const { data: interestRate } = useContractRead({
+        address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
+        abi: perpAbi,
+        functionName: "interestRate",
+        watch: true,
+        chainId: currentChainId
+    })
+
+
+
     return (
         <>
             <div className="flex mt-10 gap-10 px-10">
@@ -40,15 +74,15 @@ function Dashboard() {
                         <div className="">
                             <div className="flex justify-between ">
                                 <p className="text-md">Leverage</p>
-                                <p className="text-nd text-white">1.20x</p>
+                                <p className="text-nd text-white">{Number(leverage)}x</p>
                             </div>
                             <div className="flex justify-between  gap-2">
                                 <p className="text-md">Max Leverage</p>
-                                <p className="text-nd text-white">30x</p>
+                                <p className="text-nd text-white">{Number(maxLeverage)}x</p>
                             </div>
                             <div className="flex justify-between  gap-2">
                                 <p className="text-md">Interest Rate</p>
-                                <p className="text-nd text-white">10%</p>
+                                <p className="text-nd text-white">{Number(interestRate)}%</p>
                             </div>
                         </div>
                     </div>

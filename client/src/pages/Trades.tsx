@@ -54,7 +54,7 @@ function Trades() {
                 </div>
                 {
                     tradersInfo ? (tradersInfo.map((trades, idx) => (
-                        <div className="flex items-center border-t border-primary_2 h-10">
+                        <div key={idx} className="flex items-center border-t border-primary_2 h-10">
 
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{formatEther(trades.collateral)}</div>
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center ">{formatEther(trades.pnl)}</div>

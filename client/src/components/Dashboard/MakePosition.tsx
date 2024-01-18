@@ -1,8 +1,9 @@
 import { publicClient, walletClient } from '@utils/helpers';
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 // import tokenAbi from "@abis/contracts/mocks/MockERC20.sol/MockERC20.json"
 import { useAccount, useContractRead } from "wagmi";
+import useCurrentChainId from "@hooks/useCurrentChainId"
 
 interface FormData {
     // Define form fields
@@ -24,6 +25,8 @@ interface IPair {
 
 export function MakePosition() {
     const { address } = useAccount();
+    const currentChainId = useCurrentChainId()
+    const [pairPrice, setPairPrice] = useState<string | null>(null)
     const form = useRef<HTMLFormElement>(null)
     const [formData, setFormData] = useState<FormData>({
         pair: {
@@ -49,12 +52,6 @@ export function MakePosition() {
         });
     };
 
-    const handlePairChange = (e:
-        | React.ChangeEvent<HTMLInputElement>
-        | React.ChangeEvent<HTMLSelectElement>) => {
-        formData.pair = pairsData[e.target.value]
-    }
-
     const { data: pairsData }: {
         data: IPair[] | undefined
     } = useContractRead({
@@ -64,6 +61,29 @@ export function MakePosition() {
         watch: true
         // chainId: currentChainId
     })
+
+
+    const getPairPrice = async (pair: any) => {
+
+        const data = await publicClient.readContract({
+            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+            abi: perpAbi,
+            functionName: 'getPairPrice',
+            args: [formData.pair]
+        })
+
+
+        const val = Number(data) / Math.pow(10, 38)
+        setPairPrice(val.toFixed(4))
+    }
+
+    const handlePairChange = (e:
+        | React.ChangeEvent<HTMLInputElement>
+        | React.ChangeEvent<HTMLSelectElement>) => {
+        formData.pair = pairsData[e.target.value]
+        getPairPrice(pairsData[e.target.value])
+    }
+
 
     const submitForm = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -89,6 +109,8 @@ export function MakePosition() {
         })
         console.log(hash, "transaction completed")
     }
+
+
     return (
         <form ref={form} onSubmit={submitForm} className=' rounded-xl bg-primary_4 m-auto flex flex-col gap-2   pb-3'>
             <select name="pair" onChange={handlePairChange} id="large" className="block py-3 px-4 w-full text-base text-gray-900  rounded-lg border border-primary_2 focus:ring-0 focus:outline-none dark:bg-primary_1
@@ -99,11 +121,12 @@ export function MakePosition() {
                 ))}
 
             </select>
-
+            <p>{pairPrice ? pairPrice : ""}</p>
             <div className="h-12 rounded-md border border-primary_2 mb-2 bg-primary_1 flex">
                 <input type="number" min="0" name="sizeAmount" value={formData.sizeAmount ? formData.sizeAmount : ""} onChange={handleInputChange} placeholder="Size amount" className="h-full w-[85%] bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
                 <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
             </div>
+
             <div className="h-12 rounded-md border border-primary_2 mb-2 bg-primary_1  hidden">
                 <input type="number" min="0" name="collateralAmount" value={formData.collateralAmount ? formData.collateralAmount : ""} onChange={handleInputChange} placeholder="Collateral amount" className="h-full w-[85%]
                  bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
