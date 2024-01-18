@@ -1,4 +1,8 @@
-import React, { useState } from 'react'
+import { publicClient, walletClient } from '@utils/helpers';
+import React, { useRef, useState } from 'react'
+import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
+// import tokenAbi from "@abis/contracts/mocks/MockERC20.sol/MockERC20.json"
+import { useAccount, useContractRead } from "wagmi";
 
 interface FormData {
     // Define form fields
@@ -6,20 +10,28 @@ interface FormData {
         baseCurrency: string,
         quoteCurrency: string,
     };
-    sizeAmount: number | null;
+    sizeAmount: number;
     collateralAmount: number | null;
     position: string | null
 }
 
-export function MakePosition() {
+interface IPair {
 
+    baseCurrency: string,
+    quoteCurrency: string
+
+}
+
+export function MakePosition() {
+    const { address } = useAccount();
+    const form = useRef<HTMLFormElement>(null)
     const [formData, setFormData] = useState<FormData>({
         pair: {
             baseCurrency: "",
             quoteCurrency: ""
         },
         sizeAmount: null,
-        collateralAmount: null,
+        collateralAmount: 0,
         position: null
     });
 
@@ -40,83 +52,60 @@ export function MakePosition() {
     const handlePairChange = (e:
         | React.ChangeEvent<HTMLInputElement>
         | React.ChangeEvent<HTMLSelectElement>) => {
-        let pair;
-        switch (e.target.value) {
-            case "1":
-                pair = {
-                    baseCurrency: "BTC",
-                    quoteCurrency: "ETH"
-                }
-                break;
-            case "2":
-                pair = {
-                    baseCurrency: "BTC",
-                    quoteCurrency: "LINKS"
-                }
-                break;
-            case "3":
-                pair = {
-                    baseCurrency: "BTC",
-                    quoteCurrency: "GHO"
-                }
-                break;
-            case "4":
-                pair = {
-                    baseCurrency: "ETH",
-                    quoteCurrency: "FORTH"
-                }
-                break;
-            case "5":
-                pair = {
-                    baseCurrency: "ETH",
-                    quoteCurrency: "LINKS"
-                }
-                break;
-            case "6":
-                pair = {
-                    baseCurrency: "ETH",
-                    quoteCurrency: "GHO"
-                }
-                break;
-            case "7":
-                pair = {
-                    baseCurrency: "LINKS",
-                    quoteCurrency: "FORTH"
-                }
-                break;
-
-            default:
-                break;
-        }
-        formData.pair = pair
+        formData.pair = pairsData[e.target.value]
     }
 
+    const { data: pairsData }: {
+        data: IPair[] | undefined
+    } = useContractRead({
+        address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
+        abi: perpAbi,
+        functionName: "getSupportedPairs",
+        watch: true
+        // chainId: currentChainId
+    })
 
-    const submitForm = (e: React.FormEvent) => {
+    const submitForm = async (e: React.FormEvent) => {
         e.preventDefault()
+        const { request } = await publicClient.simulateContract({
+            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+            abi: perpAbi,
+            functionName: 'openPosition',
+            args: [formData.pair, formData.sizeAmount, formData.collateralAmount, Boolean(formData.position)],
+            account: address,
+        })
 
-        console.log(formData)
+        //@ts-ignore
+        const hash = await walletClient.writeContract(request)
+        form.current.reset()
+        setFormData({
+            pair: {
+                baseCurrency: "",
+                quoteCurrency: ""
+            },
+            sizeAmount: null,
+            collateralAmount: 0,
+            position: null
+        })
+        console.log(hash, "transaction completed")
     }
     return (
-        <form onSubmit={submitForm} className=' rounded-xl bg-primary_4 m-auto flex flex-col gap-2   pb-3'>
+        <form ref={form} onSubmit={submitForm} className=' rounded-xl bg-primary_4 m-auto flex flex-col gap-2   pb-3'>
             <select name="pair" onChange={handlePairChange} id="large" className="block py-3 px-4 w-full text-base text-gray-900  rounded-lg border border-primary_2 focus:ring-0 focus:outline-none dark:bg-primary_1
                                  dark:border-primary_2 dark:placeholder-gray-400 dark:text-white dark:focus:ring-0 dark:focus:border-primary_2  appearance-none">
                 <option defaultValue={""}>Choose a Pair</option>
-                <option value="1">BTC/ETH</option>
-                <option value="2">BTC/LINKS</option>
-                <option value="3">BTC/GHO</option>
-                <option value="4">ETH/FORTH</option>
-                <option value="5">ETH/LINKS</option>
-                <option value="6">ETH/GHO</option>
-                <option value="7">LINKS/FORTH</option>
+                {pairsData && pairsData.map((pair, idx) => (
+                    <option value={idx} key={idx}>{pair.baseCurrency.toUpperCase()}/{pair.quoteCurrency.toUpperCase()}</option>
+                ))}
+
             </select>
 
             <div className="h-12 rounded-md border border-primary_2 mb-2 bg-primary_1 flex">
-                <input type="number" min="0" name="sizeAmount" value={formData.sizeAmount} onChange={handleInputChange} placeholder="Size amount" className="h-full w-[85%] bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
+                <input type="number" min="0" name="sizeAmount" value={formData.sizeAmount ? formData.sizeAmount : ""} onChange={handleInputChange} placeholder="Size amount" className="h-full w-[85%] bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
                 <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
             </div>
-            <div className="h-12 rounded-md border border-primary_2 mb-2 bg-primary_1 flex">
-                <input type="number" min="0" name="collateralAmount" value={formData.collateralAmount} onChange={handleInputChange} placeholder="Collateral amount" className="h-full w-[85%]
+            <div className="h-12 rounded-md border border-primary_2 mb-2 bg-primary_1  hidden">
+                <input type="number" min="0" name="collateralAmount" value={formData.collateralAmount ? formData.collateralAmount : ""} onChange={handleInputChange} placeholder="Collateral amount" className="h-full w-[85%]
                  bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
                 <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
             </div>
@@ -130,13 +119,10 @@ export function MakePosition() {
                         value="true"
                         checked={formData.position === "true"}
                         onChange={handleInputChange}
-                        className="w-4 h-4 text-primary cursor-pointer bg-primary_4 border-primary_4 focus:ring-primary accent-primary outline-none"
+                        hidden
                     />
-                    <label
-                        htmlFor="option1"
-                        className="ml-2 text-xs font-medium text-primary cursor-pointer"
-                    >
-                        Long
+                    <label htmlFor="option1" className={`${formData.position === "true" ? "bg-green-500" : ""} inline-flex items-center justify-center px-4 py-2 border border-green-500 rounded cursor-pointer hover:bg-green-500`}>
+                        <span className=" text-white">Long </span>
                     </label>
                 </div>
 
@@ -148,13 +134,11 @@ export function MakePosition() {
                         value="false"
                         checked={formData.position === "false"}
                         onChange={handleInputChange}
-                        className="w-4 h-4 text-primary cursor-pointer bg-primary_4 border-primary_4 focus:ring-primary accent-primary outline-none"
+                        hidden
+
                     />
-                    <label
-                        htmlFor="option2"
-                        className="ml-2 text-xs font-medium cursor-pointer text-primary"
-                    >
-                        Short
+                    <label htmlFor="option2" className={`${formData.position === "false" ? "bg-red-500" : ""} inline-flex items-center justify-center px-4 py-2 border border-red-500 rounded cursor-pointer hover:bg-red-500`}>
+                        <span className=" text-white">Short </span>
                     </label>
                 </div>
 

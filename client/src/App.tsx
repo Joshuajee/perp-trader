@@ -6,11 +6,11 @@ import NoPage from "@pages/NoPage";
 import Vault from "@pages/Vault";
 import Dashboard from "@pages/Dashboard";
 import Trades from "@pages/Trades";
-import { localhost } from "wagmi/chains";
+import { sepolia } from "wagmi/chains";
 
 
 // Choose which chains you'd like to show
-const chains = [localhost];
+const chains = [sepolia];
 
 
 const config = createConfig(

@@ -1,9 +1,25 @@
 
 import { TbArrowBigUpLinesFilled } from "react-icons/tb";
 import { TbArrowBigDownLinesFilled } from "react-icons/tb";
+import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 import { LuCandlestickChart } from "react-icons/lu";
+import { useAccount, useContractRead } from "wagmi";
+import useCurrentChainId from "@hooks/useCurrentChainId";
 
 function Trades() {
+    const { address } = useAccount();
+    const currentChainId = useCurrentChainId()
+
+    const { data: tradersInfo } = useContractRead({
+        address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
+        abi: perpAbi,
+        functionName: "getTradersInfo",
+        watch: true,
+        chainId: currentChainId
+    })
+
+    console.log(tradersInfo)
+
     return (
         <div className="mt-10 gap-10 px-10">
             <h1 className="text-lg font-semibold mb-4 flex gap-2 items-center">Trades <LuCandlestickChart size={18} /></h1>

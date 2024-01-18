@@ -6,6 +6,7 @@ import { useState } from "react";
 import { publicClient, walletClient } from "@utils/helpers";
 import { useAccount } from "wagmi";
 
+
 export function DepositCollateral() {
     const [amount, setAmount] = useState<string>("")
     const { address } = useAccount();
@@ -31,6 +32,7 @@ export function DepositCollateral() {
         const weiValue = parseEther(amount, "wei")
 
         await approve(weiValue)
+
         const { request } = await publicClient.simulateContract({
             address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
             abi: perpAbi,
