@@ -113,7 +113,7 @@ export function PriceSummary({ authPair, setAuthPair }: { authPair: number, setA
                 ))}
 
             </div>
-            {pairsData.length > 0 && <div className="h-full w-[20%] flex items-center p-3 space-x-3 ">
+            {pairsData && pairsData.length > 0 && <div className="h-full w-[20%] flex items-center p-3 space-x-3 ">
 
                 <p className="font-semibold text-white text-xl w-[70%] text-center">{pairsData[pair].baseCurrency.toUpperCase()}/{pairsData[pair].quoteCurrency.toUpperCase()}</p>
                 <FaChevronDown size={18} className="text-white cursor-pointer pt-1" onClick={() => setDrop(!drop)} />
