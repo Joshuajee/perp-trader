@@ -98,8 +98,8 @@ export function PriceSummary({ authPair, setAuthPair }: { authPair: number, setA
 
 
     return (
-        <div className="h-20 w-full rounded-md bg-primary_4 flex gap-x-2 relative">
-            <div className={` ${drop ? "flex" : "hidden"} absolute top-20 bg-primary_5 rounded-b-md w-[20%]  h-auto  flex-col gap-1`}>
+        <div className="h-20 w-full rounded-md bg-primary_4 flex gap-x-2 relative pl-3">
+            <div className={` ${drop ? "flex" : "hidden"} absolute top-16 bg-primary_5 rounded-b-md w-[20%]  h-auto  flex-col gap-1`}>
 
                 {pairsData && pairsData.map((pair, idx) => (
 
