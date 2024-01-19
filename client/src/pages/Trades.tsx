@@ -18,6 +18,7 @@ function Trades() {
     const { address } = useAccount();
     const currentChainId = useCurrentChainId()
 
+    //@ts-ignore
     const { data: tradersInfo }: { data: ITrades[] } = useContractRead({
         address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
         abi: perpAbi,

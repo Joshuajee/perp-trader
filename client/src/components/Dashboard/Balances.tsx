@@ -5,6 +5,7 @@ import { formatEther } from "viem"
 import useCurrentChainId from "@hooks/useCurrentChainId"
 
 export function Balances() {
+
     const { address } = useAccount();
     const currentChainId = useCurrentChainId()
     const { data: ghoBalance } = useContractRead({

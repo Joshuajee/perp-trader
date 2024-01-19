@@ -1,4 +1,3 @@
-import bitcoin from "@assets/icons/bitcoin.png"
 import { useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { useContractRead } from "wagmi";
@@ -81,15 +80,19 @@ export function PriceSummary({ authPair, setAuthPair }: { authPair: number, setA
     }
 
     useEffect(() => {
-        getPairPrice(pairsData[pair])
-        getOpenLongInterest(pairsData[pair])
-        getOpenShortInterest(pairsData[pair])
+        if (pairsData) {
+            getPairPrice(pairsData[pair])
+            getOpenLongInterest(pairsData[pair])
+            getOpenShortInterest(pairsData[pair])
+        }
     }, [pairsData])
 
 
     useEffect(() => {
         setPair(authPair)
-        getPairPrice(pairsData[authPair])
+        if (pairsData) {
+            getPairPrice(pairsData[authPair])
+        }
 
     }, [authPair])
 

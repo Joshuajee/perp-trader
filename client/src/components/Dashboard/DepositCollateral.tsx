@@ -16,9 +16,8 @@ export function DepositCollateral() {
 
 
 
-    const approve = async (weiValue) => {
+    const approve = async (weiValue: bigint) => {
         //make approval
-
         const { request: approvalRequest } = await publicClient.simulateContract({
             address: `0x${import.meta.env.VITE_GHO_ADDRESS.substring(2)}`,
             abi: tokenAbi,
@@ -82,7 +81,10 @@ export function DepositCollateral() {
                 </div>
 
                 <div className="h-14 flex gap-4">
-                    <button disabled={isLoadingWithdrawal} onClick={withdraw} type="button" className="bg-blue-700 text-white  py-3 rounded-lg mt-2 w-1/2 flex justify-center">{!isLoadingWithdrawal && <span className=" text-white">Withdraw </span>} <Oval visible={isLoadingWithdrawal} height={20} color='#fff' secondaryColor='#000' />  </button>
+                    <button disabled={isLoadingWithdrawal} onClick={withdraw} type="button" className="bg-blue-700 text-white  py-3 rounded-lg mt-2 w-1/2 flex justify-center">
+                        {!isLoadingWithdrawal && <span className=" text-white">Withdraw </span>}
+                        <Oval visible={isLoadingWithdrawal} height={20} color='#fff' secondaryColor='#000' />
+                    </button>
                     <button disabled={isLoadingDeposit} onClick={deposit} type="button" className="bg-green-700 text-white  py-3 rounded-lg mt-2 w-1/2 flex justify-center">
                         {!isLoadingDeposit && <span className=" text-white">Deposit </span>} <Oval visible={isLoadingDeposit} height={20} color='#fff' secondaryColor='#000' />
                     </button>

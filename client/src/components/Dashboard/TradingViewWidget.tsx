@@ -1,5 +1,5 @@
 // TradingViewWidget.jsx
-import React, { useEffect, useRef, memo } from 'react';
+import { useEffect, useRef, memo } from 'react';
 
 function TradingViewWidget() {
     const container = useRef<HTMLDivElement>(null)
@@ -24,7 +24,7 @@ function TradingViewWidget() {
           "support_host": "https://www.tradingview.com"
         }`;
 
-            container.current.appendChild(script);
+            container.current && container.current.appendChild(script);
             return () => {
                 script.remove()
             }

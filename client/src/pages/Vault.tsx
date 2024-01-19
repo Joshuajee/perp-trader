@@ -18,7 +18,7 @@ export default function Vault() {
     const [isLoadingWithdrawal, setIsLoadingWithdrawal] = useState<boolean>(false)
 
 
-
+    //@ts-ignore
     const { data: interestRate }: { data: string } = useContractRead({
         address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
         abi: perpAbi,
@@ -28,7 +28,7 @@ export default function Vault() {
         account: address
     })
 
-
+    //@ts-ignore
     const { data: vaultInfo }: {
         data: []
     } = useContractRead({
@@ -41,7 +41,7 @@ export default function Vault() {
     })
 
 
-    const approve = async (weiValue) => {
+    const approve = async (weiValue: bigint) => {
         //make approval
 
         const { request: approvalRequest } = await publicClient.simulateContract({

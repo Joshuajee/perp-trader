@@ -1,6 +1,5 @@
-import { Outlet, Link, useRoutes, useLocation } from "react-router-dom";
+import { Outlet, Link, useLocation } from "react-router-dom";
 
-import logo from "@assets/images/logo.png"
 import { ConnectKitButton } from "connectkit";
 
 const Layout = () => {

@@ -13,7 +13,7 @@ interface FormData {
         baseCurrency: string,
         quoteCurrency: string,
     };
-    sizeAmount: number;
+    sizeAmount: number | null;
     collateralAmount: number | null;
     position: string | null
 }
@@ -64,8 +64,8 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
         address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
         abi: perpAbi,
         functionName: "getSupportedPairs",
-        watch: true
-        // chainId: currentChainId
+        watch: true,
+        chainId: currentChainId
     })
 
 
@@ -86,9 +86,11 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
     const handlePairChange = (e:
         | React.ChangeEvent<HTMLInputElement>
         | React.ChangeEvent<HTMLSelectElement>) => {
-        formData.pair = pairsData[e.target.value]
-        setAuthPair(Number(e.target.value))
-        getPairPrice(pairsData[e.target.value])
+        if (pairsData) {
+            formData.pair = pairsData[Number(e.target.value)]
+            setAuthPair(Number(e.target.value))
+            getPairPrice(pairsData[Number(e.target.value)])
+        }
     }
 
 
@@ -113,7 +115,7 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
         //@ts-ignore
         const hash = await walletClient.writeContract(request)
         //reset form
-        form.current.reset()
+        form.current && form.current.reset()
         setFormData({
             pair: {
                 baseCurrency: "",
@@ -132,9 +134,10 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
     }
 
     useEffect(() => {
-        formData.pair = pairsData[authPair]
-        // console.log(pairsData.findIndex(pair => pair.baseCurrency === formData.pair.baseCurrency && pair.quoteCurrency === formData.pair.quoteCurrency), pairsData, formData.pair)
-        getPairPrice(pairsData[authPair])
+        if (pairsData) {
+            formData.pair = pairsData[authPair]
+            getPairPrice(pairsData[authPair])
+        }
     }, [authPair])
 
 

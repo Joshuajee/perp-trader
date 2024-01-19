@@ -39,7 +39,7 @@ export function Positions() {
 
     const amountInp = useRef<HTMLInputElement>(null)
 
-
+    // @ts-ignore
     const { data: traderPositions }: { data: IPosition[] } = useContractRead({
         address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
         abi: perpAbi,
@@ -151,12 +151,12 @@ export function Positions() {
                         <div className="w-[14.29%]  h-full font-semibold text-sm flex items-center justify-center "><button onClick={() => {
                             setModal(1)
                             setPosition(Number(position.positionId))
-                            amountInp.current.focus()
+                            amountInp.current && amountInp.current.focus()
                         }} className=" w-fit px-3 py-2 flex items-center text-xs  hover:bg-red-600 hover:text-white  ">Decrease</button></div>
                         <div className="w-[14.29%]  h-full font-semibold text-sm flex items-center justify-center"><button onClick={() => {
                             setModal(2)
                             setPosition(Number(position.positionId))
-                            amountInp.current.focus()
+                            amountInp.current && amountInp.current.focus()
                         }} className=" w-fit px-3 py-2 flex items-center text-xs  hover:bg-green-600 hover:text-white  ">Increase</button></div>
                         <div className="w-[14.29%]  h-full font-semibold text-sm flex items-center justify-center">
                             {(!isLoadingClose || Number(position.positionId) != closePositionId) && <button disabled={isLoadingClose && Number(position.positionId) == closePositionId} onClick={() => closePosition(Number(position.positionId))} className=" w-fit px-3 py-2 flex items-center text-xs   hover:bg-blue-600 hover:text-white  ">Close</button>}
