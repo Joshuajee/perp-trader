@@ -56,10 +56,10 @@ function Trades() {
                     tradersInfo ? (tradersInfo.map((trades, idx) => (
                         <div key={idx} className="flex items-center border-t border-primary_2 h-10">
 
-                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{formatEther(trades.collateral)}</div>
-                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center ">{formatEther(trades.pnl)}</div>
-                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{Number(trades.usedLeverage)} x</div>
-                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{Number(trades.maxLeverage)} x</div>
+                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{Number(formatEther(trades.collateral))}</div>
+                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center ">{String(formatEther(trades.pnl))}</div>
+                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{String(trades.usedLeverage)} x</div>
+                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{String(trades.maxLeverage)} x</div>
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{formatEther(trades.liquidationFee)} GHO</div>
 
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center"><button onClick={() => { liquidate(trades.trader) }} className=" w-fit px-3 py-2 flex items-center text-xs  bg-red-600 text-white  ">Liquidate</button></div>

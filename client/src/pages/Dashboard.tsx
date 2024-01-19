@@ -86,36 +86,7 @@ function Dashboard() {
                             </div>
                         </div>
                     </div>
-                    <div className="w-full bg-primary_4 rounded-md py-5 px-4  flex flex-col gap-8 mt-10">
-                        <h3 className="text-white">Short BTC</h3>
-                        <div className="">
-                            <div className="flex justify-between ">
-                                <p className="text-md">Market</p>
-                                <p className="text-nd text-white">BTC/USD</p>
-                            </div>
-                            <div className="flex justify-between  gap-2">
-                                <p className="text-md">Entry Price</p>
-                                <p className="text-nd text-white">$45,459.50</p>
-                            </div>
-                            <div className="flex justify-between  gap-2">
-                                <p className="text-md">Exit Price</p>
-                                <p className="text-nd text-white">$45,459.50</p>
-                            </div>
-                            <div className="flex justify-between  gap-2">
-                                <p className="text-md">Borrow Fee</p>
-                                <p className="text-nd text-white">-0.009/h</p>
-                            </div>
-                            <div className="flex justify-between  gap-2">
-                                <p className="text-md">Funding Fee</p>
-                                <p className="text-nd text-white">+0.009/h</p>
-                            </div>
-                            <div className="flex justify-between  gap-2">
-                                <p className="text-md">Available Liquidity</p>
-                                <p className="text-nd text-white">$45,938,493.09</p>
-                            </div>
-                        </div>
 
-                    </div>
                 </div>
 
             </div>

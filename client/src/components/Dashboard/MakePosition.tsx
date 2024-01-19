@@ -4,6 +4,7 @@ import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 // import tokenAbi from "@abis/contracts/mocks/MockERC20.sol/MockERC20.json"
 import { useAccount, useContractRead } from "wagmi";
 import useCurrentChainId from "@hooks/useCurrentChainId"
+import { parseEther } from 'viem';
 
 interface FormData {
     // Define form fields
@@ -91,7 +92,7 @@ export function MakePosition() {
             address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
             abi: perpAbi,
             functionName: 'openPosition',
-            args: [formData.pair, formData.sizeAmount, formData.collateralAmount, position],
+            args: [formData.pair, parseEther(String(formData.sizeAmount), "wei"), formData.collateralAmount, position],
             account: address,
         })
 
