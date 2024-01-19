@@ -153,7 +153,7 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
                 ))}
 
             </select>
-            <p>{pairPrice ? pairPrice : ""}</p>
+            <p>{pairPrice ? "Price Ratio: " + pairPrice : ""}</p>
             <div className="h-12 rounded-md border border-primary_2 mb-2 bg-primary_1 flex">
                 <input type="number" min="0" name="sizeAmount" value={formData.sizeAmount ? formData.sizeAmount : ""} onChange={handleInputChange} placeholder="Size amount" className="h-full w-[85%] bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
                 <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
