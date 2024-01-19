@@ -109,7 +109,7 @@ export function PriceSummary() {
                 <FaChevronDown size={18} className="text-white cursor-pointer pt-1" onClick={() => setDrop(!drop)} />
             </div>}
             <div className="h-full w-[15%] flex flex-col justify-center font-semibold">
-                <p className="text-white text-md"> Ratio</p>
+                <p className="text-white text-md"> Price Ratio</p>
                 <p className=" text-sm">{pairPrice ? pairPrice : ""}</p>
             </div>
             <div className="h-full w-[15%] flex flex-col justify-center font-semibold">

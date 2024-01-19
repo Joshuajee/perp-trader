@@ -62,7 +62,7 @@ function Trades() {
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{String(trades.maxLeverage)} x</div>
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{formatEther(trades.liquidationFee)} GHO</div>
 
-                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center"><button onClick={() => { liquidate(trades.trader) }} className=" w-fit px-3 py-2 flex items-center text-xs  bg-red-600 text-white  ">Liquidate</button></div>
+                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center"><button disabled={Number(formatEther(trades.liquidationFee)) == 0 ? false : false} onClick={() => { liquidate(trades.trader) }} className=" w-fit px-3 py-2 flex items-center text-xs  bg-red-600 text-white  ">Liquidate</button></div>
 
                         </div>
                     ))) : (

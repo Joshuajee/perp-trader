@@ -5,11 +5,15 @@ import { parseEther } from "viem";
 import { useState } from "react";
 import { publicClient, walletClient } from "@utils/helpers";
 import { useAccount } from "wagmi";
+import { Oval } from "react-loader-spinner";
 
 
 export function DepositCollateral() {
     const [amount, setAmount] = useState<string>("")
     const { address } = useAccount();
+    const [isLoadingDeposit, setIsLoadingDeposit] = useState<boolean>(false)
+    const [isLoadingWithdrawal, setIsLoadingWithdrawal] = useState<boolean>(false)
+
 
 
     const approve = async (weiValue) => {
@@ -29,6 +33,7 @@ export function DepositCollateral() {
 
     const deposit = async () => {
         if (Number(amount) == 0) return
+        setIsLoadingDeposit(true)
         const weiValue = parseEther(amount, "wei")
 
         await approve(weiValue)
@@ -43,10 +48,13 @@ export function DepositCollateral() {
         //@ts-ignore
         const hash = await walletClient.writeContract(request)
         console.log(hash, "transaction completed")
+        setIsLoadingDeposit(false)
     }
 
     const withdraw = async () => {
         if (Number(amount) == 0) return
+        setIsLoadingWithdrawal(true)
+
         const weiValue = parseEther(amount, "wei")
 
         const { request } = await publicClient.simulateContract({
@@ -59,6 +67,7 @@ export function DepositCollateral() {
         //@ts-ignore
         const hash = await walletClient.writeContract(request)
         console.log(hash, "transaction completed")
+        setIsLoadingWithdrawal(false)
     }
 
     return (
@@ -71,8 +80,10 @@ export function DepositCollateral() {
                 </div>
 
                 <div className="h-14 flex gap-4">
-                    <button onClick={withdraw} type="button" className="bg-blue-700 text-white  py-3 rounded-lg mt-2 w-1/2">Withdraw  </button>
-                    <button onClick={deposit} type="button" className="bg-green-700 text-white  py-3 rounded-lg mt-2 w-1/2">Deposit  </button>
+                    <button disabled={isLoadingWithdrawal} onClick={withdraw} type="button" className="bg-blue-700 text-white  py-3 rounded-lg mt-2 w-1/2 flex justify-center">{!isLoadingWithdrawal && <span className=" text-white">Withdraw </span>} <Oval visible={isLoadingWithdrawal} height={20} color='#fff' secondaryColor='#000' />  </button>
+                    <button disabled={isLoadingDeposit} onClick={deposit} type="button" className="bg-green-700 text-white  py-3 rounded-lg mt-2 w-1/2 flex justify-center">
+                        {!isLoadingDeposit && <span className=" text-white">Deposit </span>} <Oval visible={isLoadingDeposit} height={20} color='#fff' secondaryColor='#000' />
+                    </button>
                 </div>
             </div>
 

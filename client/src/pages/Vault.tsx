@@ -7,12 +7,16 @@ import { formatEther, parseEther } from "viem"
 import { useState } from "react";
 import { publicClient, walletClient } from "@utils/helpers";
 import useCurrentChainId from "@hooks/useCurrentChainId";
+import { Oval } from "react-loader-spinner";
 
 export default function Vault() {
     const { address } = useAccount();
     const currentChainId = useCurrentChainId()
     const [depositVolume, setDepositVolume] = useState<string | null>(null)
     const [withdrawalVolume, setWithdrawalVolume] = useState<string | null>(null)
+    const [isLoadingDeposit, setIsLoadingDeposit] = useState<boolean>(false)
+    const [isLoadingWithdrawal, setIsLoadingWithdrawal] = useState<boolean>(false)
+
 
 
     const { data: interestRate }: { data: string } = useContractRead({
@@ -54,6 +58,8 @@ export default function Vault() {
     }
 
     const deposit = async () => {
+        if (Number(depositVolume) == 0) return
+        setIsLoadingDeposit(true)
         const weiValue = parseEther(`${depositVolume}`, "wei")
 
         await approve(weiValue)
@@ -67,9 +73,14 @@ export default function Vault() {
         //@ts-ignore
         const hash = await walletClient.writeContract(request)
         setDepositVolume(null)
+        setIsLoadingDeposit(false)
     }
 
     const withdraw = async () => {
+        if (Number(withdrawalVolume) == 0) return
+
+        setIsLoadingWithdrawal(true)
+
         const weiValue = parseEther(`${withdrawalVolume}`, "wei")
 
         const { request } = await publicClient.simulateContract({
@@ -83,6 +94,7 @@ export default function Vault() {
         const hash = await walletClient.writeContract(request)
         console.log(hash, "transaction completed")
         setWithdrawalVolume(null)
+        setIsLoadingWithdrawal(false)
     }
 
     return (
@@ -114,7 +126,8 @@ export default function Vault() {
                         <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
                     </div>
 
-                    <button onClick={deposit} type="button" className="bg-green-700 text-white w-full py-3 rounded-lg mt-2">Deposit  </button>
+                    <button disabled={isLoadingDeposit} onClick={deposit} type="button" className="bg-green-700 text-white w-full py-3 rounded-lg mt-2 flex justify-center"> {!isLoadingDeposit && <span className=" text-white">Deposit </span>} <Oval visible={isLoadingDeposit} height={20} color='#fff' secondaryColor='#000' />  </button>
+
                 </div>
                 <div>
                     <h3 className="text-md mb-2 flex  gap-2 items-center"> <TbTransferOut size={16} /> <span>Withdraw Token</span></h3>
@@ -123,7 +136,9 @@ export default function Vault() {
                         <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
                     </div>
 
-                    <button onClick={withdraw} type="button" className="bg-purple-700 text-white w-full py-3 rounded-lg mt-2">Withdraw </button>
+                    <button disabled={isLoadingWithdrawal} onClick={withdraw} type="button" className="bg-purple-700 text-white w-full py-3 rounded-lg mt-2 flex justify-center">
+                        {!isLoadingWithdrawal && <span className=" text-white">Withdraw </span>} <Oval visible={isLoadingWithdrawal} height={20} color='#fff' secondaryColor='#000' />
+                    </button>
                 </div>
             </form>
         </div>

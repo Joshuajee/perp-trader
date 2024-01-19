@@ -5,6 +5,7 @@ import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 import { useAccount, useContractRead } from "wagmi";
 import useCurrentChainId from "@hooks/useCurrentChainId"
 import { parseEther } from 'viem';
+import { Oval } from 'react-loader-spinner';
 
 interface FormData {
     // Define form fields
@@ -29,6 +30,10 @@ export function MakePosition() {
     const currentChainId = useCurrentChainId()
     const [pairPrice, setPairPrice] = useState<string | null>(null)
     const form = useRef<HTMLFormElement>(null)
+    const [isLoadingLong, setIsLoadingLong] = useState<boolean>(false)
+    const [isLoadingShort, setIsLoadingShort] = useState<boolean>(false)
+
+
     const [formData, setFormData] = useState<FormData>({
         pair: {
             baseCurrency: "",
@@ -88,6 +93,14 @@ export function MakePosition() {
 
     const openPosition = async (position: boolean) => {
 
+        if (!formData.sizeAmount || !formData.pair.baseCurrency) return
+        if (position) {
+            setIsLoadingLong(true)
+        } else {
+            setIsLoadingShort(true)
+        }
+
+
         const { request } = await publicClient.simulateContract({
             address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
             abi: perpAbi,
@@ -110,6 +123,11 @@ export function MakePosition() {
             position: null
         })
         console.log(hash, "transaction completed")
+        if (position) {
+            setIsLoadingLong(false)
+        } else {
+            setIsLoadingShort(false)
+        }
     }
 
 
@@ -136,12 +154,12 @@ export function MakePosition() {
             </div>
 
             <div className="flex gap-6 justify-between ">
-                <button onClick={() => openPosition(false)} type='button' className="bg-red-500 w-1/2 inline-flex items-center justify-center px-4 py-2 border border-red-500 rounded cursor-pointer hover:bg-red-500">
-                    <span className=" text-white">Short </span>
+                <button disabled={isLoadingShort} onClick={() => openPosition(false)} type='button' className="bg-red-500 w-1/2 inline-flex items-center justify-center px-4 py-2 border border-red-500 rounded cursor-pointer hover:bg-red-500">
+                    {!isLoadingShort && <span className=" text-white">Short </span>} <Oval visible={isLoadingShort} height={20} color='#fff' secondaryColor='#000' />
                 </button>
 
-                <button onClick={() => openPosition(true)} type='button' className="bg-green-500 w-1/2 inline-flex items-center justify-center px-4 py-2 border border-green-500 rounded cursor-pointer hover:bg-green-500">
-                    <span className=" text-white">Long </span>
+                <button disabled={isLoadingLong} onClick={() => openPosition(true)} type='button' className="bg-green-500 w-1/2 inline-flex items-center justify-center px-4 py-2 border border-green-500 rounded cursor-pointer hover:bg-green-500">
+                    {!isLoadingLong && <span className=" text-white">Long </span>} <Oval visible={isLoadingLong} height={20} color='#fff' secondaryColor='#000' />
                 </button>
             </div>
 
