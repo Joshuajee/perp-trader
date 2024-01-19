@@ -30,13 +30,13 @@ export function Balances() {
             <div className="flex flex-col items-center justify-center w-1/2">
                 <p className="text-xs font-semi-bold">Balance</p>
                 {/* @ts-ignore */}
-                <p className="text-white text-sm">{!ghoBalance ? 0 : Number(formatEther(ghoBalance))} GHO</p>
+                <p className="text-white text-sm">{!ghoBalance ? 0 : Number(formatEther(ghoBalance)).toFixed(2)} GHO</p>
             </div>
             <div className="flex flex-col items-center justify-center w-1/2">
                 <p className="text-xs font-semi-bold">Collateral</p>
                 {/* @ts-ignore */}
 
-                <p className="text-white text-sm">{!collateralBalance ? 0 : Number(formatEther(collateralBalance))} GHO</p>
+                <p className="text-white text-sm">{!collateralBalance ? 0 : Number(formatEther(collateralBalance)).toFixed(2)} GHO</p>
             </div>
         </div>
     )

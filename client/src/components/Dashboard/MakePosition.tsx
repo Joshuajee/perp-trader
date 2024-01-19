@@ -1,5 +1,5 @@
 import { publicClient, walletClient } from '@utils/helpers';
-import React, { useRef, useState } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 // import tokenAbi from "@abis/contracts/mocks/MockERC20.sol/MockERC20.json"
 import { useAccount, useContractRead } from "wagmi";
@@ -25,7 +25,7 @@ interface IPair {
 
 }
 
-export function MakePosition() {
+export function MakePosition({ authPair, setAuthPair }: { authPair: number, setAuthPair: (id: number) => void }) {
     const { address } = useAccount();
     const currentChainId = useCurrentChainId()
     const [pairPrice, setPairPrice] = useState<string | null>(null)
@@ -87,6 +87,7 @@ export function MakePosition() {
         | React.ChangeEvent<HTMLInputElement>
         | React.ChangeEvent<HTMLSelectElement>) => {
         formData.pair = pairsData[e.target.value]
+        setAuthPair(Number(e.target.value))
         getPairPrice(pairsData[e.target.value])
     }
 
@@ -130,10 +131,18 @@ export function MakePosition() {
         }
     }
 
+    useEffect(() => {
+        formData.pair = pairsData[authPair]
+        // console.log(pairsData.findIndex(pair => pair.baseCurrency === formData.pair.baseCurrency && pair.quoteCurrency === formData.pair.quoteCurrency), pairsData, formData.pair)
+        getPairPrice(pairsData[authPair])
+    }, [authPair])
+
+
+
 
     return (
         <form ref={form} className=' rounded-xl bg-primary_4 m-auto flex flex-col gap-2   pb-3'>
-            <select name="pair" onChange={handlePairChange} id="large" className="block py-3 px-4 w-full text-base text-gray-900  rounded-lg border border-primary_2 focus:ring-0 focus:outline-none dark:bg-primary_1
+            <select value={authPair} name="pair" onChange={handlePairChange} id="large" className="block py-3 px-4 w-full text-base text-gray-900  rounded-lg border border-primary_2 focus:ring-0 focus:outline-none dark:bg-primary_1
                                  dark:border-primary_2 dark:placeholder-gray-400 dark:text-white dark:focus:ring-0 dark:focus:border-primary_2  appearance-none">
                 <option defaultValue={""}>Choose a Pair</option>
                 {pairsData && pairsData.map((pair, idx) => (

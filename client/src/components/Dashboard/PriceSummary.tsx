@@ -14,7 +14,7 @@ interface IPair {
 
 }
 
-export function PriceSummary() {
+export function PriceSummary({ authPair, setAuthPair }: { authPair: number, setAuthPair: (id: number) => void }) {
     const [drop, setDrop] = useState<boolean>(false)
     const [pair, setPair] = useState<number>(0)
     const [longInterest, setLongInterest] = useState<bigint | null>(null)
@@ -85,6 +85,15 @@ export function PriceSummary() {
         getOpenLongInterest(pairsData[pair])
         getOpenShortInterest(pairsData[pair])
     }, [pairsData])
+
+
+    useEffect(() => {
+        setPair(authPair)
+        getPairPrice(pairsData[authPair])
+
+    }, [authPair])
+
+
     return (
         <div className="h-20 w-full rounded-md bg-primary_4 flex gap-x-2 relative">
             <div className={` ${drop ? "flex" : "hidden"} absolute top-20 bg-primary_5 rounded-b-md w-[20%]  h-auto  flex-col gap-1`}>
@@ -93,6 +102,7 @@ export function PriceSummary() {
 
                     <div key={idx} onClick={() => {
                         setPair(idx)
+                        setAuthPair(idx)
                         setDrop(false)
                         getPairPrice(pair)
                     }} className="h-10 w-full flex items-center  space-x-3  p-2 hover:bg-primary_4 cursor-pointer">

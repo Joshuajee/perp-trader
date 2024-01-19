@@ -48,6 +48,7 @@ export function DepositCollateral() {
         //@ts-ignore
         const hash = await walletClient.writeContract(request)
         console.log(hash, "transaction completed")
+        setAmount("")
         setIsLoadingDeposit(false)
     }
 
@@ -67,6 +68,7 @@ export function DepositCollateral() {
         //@ts-ignore
         const hash = await walletClient.writeContract(request)
         console.log(hash, "transaction completed")
+        setAmount("")
         setIsLoadingWithdrawal(false)
     }
 

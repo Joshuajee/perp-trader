@@ -4,7 +4,7 @@ import { useAccount, useContractRead } from "wagmi";
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 import { publicClient, walletClient } from '@utils/helpers';
 import { formatEther, parseEther } from 'viem';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { Oval } from 'react-loader-spinner';
 
 
@@ -36,6 +36,8 @@ export function Positions() {
     const [closePositionId, setClosePositionId] = useState<number | null>(null)
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [isLoadingClose, setIsLoadingClose] = useState<boolean>(true)
+
+    const amountInp = useRef<HTMLInputElement>(null)
 
 
     const { data: traderPositions }: { data: IPosition[] } = useContractRead({
@@ -70,23 +72,39 @@ export function Positions() {
     const changePosition = async () => {
         setIsLoading(true)
 
-        const { request } = await publicClient.simulateContract({
-            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
-            abi: perpAbi,
-            functionName: 'increasePositionSize',
-            args: [position, parseEther(String(sizeAmount), "wei")],
-            account: address,
-        })
+        if (modal == 1) {
+            const { request } = await publicClient.simulateContract({
+                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                abi: perpAbi,
+                functionName: 'decreasePositionSize',
+                args: [position, parseEther(String(sizeAmount), "wei")],
+                account: address,
+            })
 
-        //@ts-ignore
-        const hash = await walletClient.writeContract(request)
-        console.log(hash, "transaction completed")
+            //@ts-ignore
+            const hash = await walletClient.writeContract(request)
+            console.log(hash, "transaction completed")
+
+        } else if (modal == 2) {
+            const { request } = await publicClient.simulateContract({
+                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                abi: perpAbi,
+                functionName: 'increasePositionSize',
+                args: [position, parseEther(String(sizeAmount), "wei")],
+                account: address,
+            })
+
+            //@ts-ignore
+            const hash = await walletClient.writeContract(request)
+            console.log(hash, "transaction completed")
+
+        }
 
         setSizeAmount(null)
         setModal(null)
         setIsLoading(false)
     }
-    console.log(traderPositions)
+
     return (
         <div className="bg-primary_4 rounded-md py-3 h-[100vh] overflow-auto relative">
             {
@@ -102,7 +120,7 @@ export function Positions() {
                                 }} type="button" className='text-white border  px-2 text-sm'>Cancel</button>
                             </div>
                             <div className="h-12 rounded-md border border-primary_2 mb-2 bg-primary_1 flex">
-                                <input type="number" min="0" name="sizeAmount" value={sizeAmount ? sizeAmount : ""} onChange={(e) => setSizeAmount(e.target.value)} placeholder="Size amount" className="h-full w-[85%] bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
+                                <input ref={amountInp} type="number" min="0" name="sizeAmount" value={sizeAmount ? sizeAmount : ""} onChange={(e) => setSizeAmount(e.target.value)} placeholder="Size amount" className="h-full w-[85%] bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
                                 <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
                             </div>
 
@@ -133,10 +151,12 @@ export function Positions() {
                         <div className="w-[14.29%]  h-full font-semibold text-sm flex items-center justify-center "><button onClick={() => {
                             setModal(1)
                             setPosition(Number(position.positionId))
+                            amountInp.current.focus()
                         }} className=" w-fit px-3 py-2 flex items-center text-xs  hover:bg-red-600 hover:text-white  ">Decrease</button></div>
                         <div className="w-[14.29%]  h-full font-semibold text-sm flex items-center justify-center"><button onClick={() => {
                             setModal(2)
                             setPosition(Number(position.positionId))
+                            amountInp.current.focus()
                         }} className=" w-fit px-3 py-2 flex items-center text-xs  hover:bg-green-600 hover:text-white  ">Increase</button></div>
                         <div className="w-[14.29%]  h-full font-semibold text-sm flex items-center justify-center">
                             {(!isLoadingClose || Number(position.positionId) != closePositionId) && <button disabled={isLoadingClose && Number(position.positionId) == closePositionId} onClick={() => closePosition(Number(position.positionId))} className=" w-fit px-3 py-2 flex items-center text-xs   hover:bg-blue-600 hover:text-white  ">Close</button>}

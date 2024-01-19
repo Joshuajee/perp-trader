@@ -103,12 +103,12 @@ export default function Vault() {
                 <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Total Value</p>
                     {/* @ts-ignore */}
-                    <p className='text-lg text-white text-center'>GHO {vaultInfo ? Number(formatEther(vaultInfo[0])) : ""}</p>
+                    <p className='text-lg text-white text-center'>GHO {vaultInfo ? Number(formatEther(vaultInfo[0])).toFixed(2) : ""}</p>
                 </div>
                 <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Available Funds</p>
                     {/* @ts-ignore */}
-                    <p className='text-lg text-white text-center'>GHO {vaultInfo ? Number(formatEther(vaultInfo[1])) : ""}</p>
+                    <p className='text-lg text-white text-center'>GHO {vaultInfo ? Number(formatEther(vaultInfo[1])).toFixed(2) : ""}</p>
                 </div>
 
                 <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>

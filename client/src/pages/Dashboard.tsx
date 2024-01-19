@@ -12,6 +12,7 @@ function Dashboard() {
     const [tab, setTab] = useState<number>(0)
     const { address } = useAccount();
     const currentChainId = useCurrentChainId()
+    const [authPair, setAuthPair] = useState<number>(0)
 
 
     const { data: leverage } = useContractRead({
@@ -46,7 +47,7 @@ function Dashboard() {
         <>
             <div className="flex mt-10 gap-10 px-10">
                 <div className="w-[70%] h-fit flex flex-col gap-8 ">
-                    <PriceSummary />
+                    <PriceSummary authPair={authPair} setAuthPair={setAuthPair} />
                     <div className="bg-primary_4 h-[60vh] rounded-md p-1 overflow-hidden">
                         {/* <Chart /> */}
                         <TradingViewWidget />
@@ -67,7 +68,7 @@ function Dashboard() {
                         </div>
                         <Balances />
                         <div>
-                            {tab === 0 && <MakePosition />}
+                            {tab === 0 && <MakePosition authPair={authPair} setAuthPair={setAuthPair} />}
                             {tab === 1 && <DepositCollateral />}
                         </div>
 
