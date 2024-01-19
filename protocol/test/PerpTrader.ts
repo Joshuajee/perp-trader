@@ -604,6 +604,117 @@ describe("PerpTrader", function () {
   })
 
 
+  describe("Increase and Decrease Position", function () {
+
+    it("Should Increase position", async() => {
+
+      const { perpTrader, gho, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
+
+      const pair = { baseCurrency: btc, quoteCurrency: eth }
+
+      await gho.write.approve([perpTrader.address, collateralAmount])
+
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
+
+      const initialPosition = await perpTrader.read.positions([1n])
+
+      const initialCollateral = await perpTrader.read.myCollateral([user1.account.address])
+
+      await perpTrader.write.increasePositionSize([1n, sizeAmount])
+
+      const currentPosition = await perpTrader.read.positions([1n])
+
+      const currentCollateral = await perpTrader.read.myCollateral([user1.account.address])
+
+      const interest = await perpTrader.read.calculateInterest([initialPosition[2], initialPosition[4]])
+
+      expect(currentPosition[2]).to.be.equal(initialPosition[2] * 2n)
+
+      expect(currentPosition[3]).to.be.equal(initialPosition[3] * 2n)
+
+      expect(initialCollateral).to.be.equal(currentCollateral + interest)
+
+    })
+
+
+    it("Should Decrease position", async() => {
+
+      const { perpTrader, gho, btc, eth, user1 } = await loadFixture(deployAndDepositTest)
+
+      const pair = { baseCurrency: btc, quoteCurrency: eth }
+
+      await gho.write.approve([perpTrader.address, collateralAmount])
+
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
+
+      const initialPosition = await perpTrader.read.positions([1n])
+
+      const initialCollateral = await perpTrader.read.myCollateral([user1.account.address])
+
+      const decSize = sizeAmount / 2n
+
+      await perpTrader.write.decreasePositionSize([1n, decSize])
+
+      const currentPosition = await perpTrader.read.positions([1n])
+
+      const currentCollateral = await perpTrader.read.myCollateral([user1.account.address])
+
+      const interest = await perpTrader.read.calculateInterest([initialPosition[2], initialPosition[4]])
+
+      expect(currentPosition[2]).to.be.equal(initialPosition[2] / 2n)
+
+      expect(currentPosition[3]).to.be.equal(initialPosition[3] / 2n)
+
+      expect(initialCollateral).to.be.equal(currentCollateral + interest)
+
+    })
+
+    it("Should Decrease position with profit", async() => {
+
+      const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, btcInitailPrice } = await loadFixture(deployAndDepositTest)
+
+      const pair = { baseCurrency: btc, quoteCurrency: eth }
+
+      await gho.write.approve([perpTrader.address, collateralAmount])
+
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, true])
+
+      const initialPosition = await perpTrader.read.positions([1n])
+
+      const initialCollateral = await perpTrader.read.myCollateral([user1.account.address])
+
+      await btcPriceFeeds.write.updateAnswer([btcInitailPrice / 2n])
+
+      const initialPnl = await perpTrader.read.positionPnl([1n])
+
+      const decSize = sizeAmount / 2n
+
+      const interest = await perpTrader.read.calculateInterest([initialPosition[2], initialPosition[4]])
+
+      await perpTrader.write.decreasePositionSize([1n, decSize])
+
+      const currentPosition = await perpTrader.read.positions([1n])
+
+      const currentCollateral = await perpTrader.read.myCollateral([user1.account.address])
+
+      expect(currentPosition[2]).to.be.equal(initialPosition[2] / 2n)
+
+      console.log(initialPosition)
+
+      console.log(currentPosition)
+
+      console.log({initialCollateral, currentCollateral, interest, initialPnl})
+
+      //expect(currentPosition[3]).to.be.equal(initialPosition[3] + (initialPosition[3] / 2n))
+
+      expect(currentCollateral).to.be.equal(initialCollateral - interest + ((initialPnl + interest) / 2n))
+
+    })
+
+  })
+
+
+
   describe("Liquidate Trader", function () {
 
     it("Should not be able to Liquidate Trader that is not over Leveraged", async() => {
