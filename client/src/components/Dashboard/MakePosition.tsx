@@ -85,18 +85,19 @@ export function MakePosition() {
     }
 
 
-    const submitForm = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const openPosition = async (position: boolean) => {
+
         const { request } = await publicClient.simulateContract({
             address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
             abi: perpAbi,
             functionName: 'openPosition',
-            args: [formData.pair, formData.sizeAmount, formData.collateralAmount, Boolean(formData.position)],
+            args: [formData.pair, formData.sizeAmount, formData.collateralAmount, position],
             account: address,
         })
 
         //@ts-ignore
         const hash = await walletClient.writeContract(request)
+        //reset form
         form.current.reset()
         setFormData({
             pair: {
@@ -112,7 +113,7 @@ export function MakePosition() {
 
 
     return (
-        <form ref={form} onSubmit={submitForm} className=' rounded-xl bg-primary_4 m-auto flex flex-col gap-2   pb-3'>
+        <form ref={form} className=' rounded-xl bg-primary_4 m-auto flex flex-col gap-2   pb-3'>
             <select name="pair" onChange={handlePairChange} id="large" className="block py-3 px-4 w-full text-base text-gray-900  rounded-lg border border-primary_2 focus:ring-0 focus:outline-none dark:bg-primary_1
                                  dark:border-primary_2 dark:placeholder-gray-400 dark:text-white dark:focus:ring-0 dark:focus:border-primary_2  appearance-none">
                 <option defaultValue={""}>Choose a Pair</option>
@@ -133,40 +134,16 @@ export function MakePosition() {
                 <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
             </div>
 
-            <div className="flex gap-10 justify-center space-x-10">
-                <div className="flex items-center">
-                    <input
-                        id="option1"
-                        name="position"
-                        type="radio"
-                        value="true"
-                        checked={formData.position === "true"}
-                        onChange={handleInputChange}
-                        hidden
-                    />
-                    <label htmlFor="option1" className={`${formData.position === "true" ? "bg-green-500" : ""} inline-flex items-center justify-center px-4 py-2 border border-green-500 rounded cursor-pointer hover:bg-green-500`}>
-                        <span className=" text-white">Long </span>
-                    </label>
-                </div>
+            <div className="flex gap-6 justify-between ">
+                <button onClick={() => openPosition(false)} type='button' className="bg-red-500 w-1/2 inline-flex items-center justify-center px-4 py-2 border border-red-500 rounded cursor-pointer hover:bg-red-500">
+                    <span className=" text-white">Short </span>
+                </button>
 
-                <div className="flex items-center ">
-                    <input
-                        id="option2"
-                        name="position"
-                        type="radio"
-                        value="false"
-                        checked={formData.position === "false"}
-                        onChange={handleInputChange}
-                        hidden
-
-                    />
-                    <label htmlFor="option2" className={`${formData.position === "false" ? "bg-red-500" : ""} inline-flex items-center justify-center px-4 py-2 border border-red-500 rounded cursor-pointer hover:bg-red-500`}>
-                        <span className=" text-white">Short </span>
-                    </label>
-                </div>
-
+                <button onClick={() => openPosition(true)} type='button' className="bg-green-500 w-1/2 inline-flex items-center justify-center px-4 py-2 border border-green-500 rounded cursor-pointer hover:bg-green-500">
+                    <span className=" text-white">Long </span>
+                </button>
             </div>
-            <button type="submit" className="bg-blue-700 text-white  py-3 rounded-lg mt-2 w-full">Trade  </button>
+
         </form>
     )
 }
