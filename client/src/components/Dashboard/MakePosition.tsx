@@ -1,5 +1,5 @@
 import { publicClient, walletClient } from '@utils/helpers';
-import React, { useEffect, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 // import tokenAbi from "@abis/contracts/mocks/MockERC20.sol/MockERC20.json"
 import { useAccount, useContractRead } from "wagmi";
