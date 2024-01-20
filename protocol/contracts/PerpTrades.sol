@@ -57,6 +57,7 @@ contract PerpTrades is ERC4626, Ownable {
     event PositionOpened(uint indexed positionId, PairStruct indexed pair, address indexed trader, uint256 size, bool isLong);
     event PositionClosed(uint indexed positionId, PairStruct indexed pair, address indexed trader, uint256 size);
     event PositionSizeIncrease(uint indexed id, uint inc);
+    event PositionSizeDecrease(uint indexed id, uint inc);
     event PositionCollateralIncreased(uint indexed id, uint inc);
     event PositionCollateralDecreased(uint indexed id, uint desc);
     event LiquidateTrader(address indexed liquidator, address indexed trader, uint liquidationFee);
@@ -232,28 +233,32 @@ contract PerpTrades is ERC4626, Ownable {
         address trader = msg.sender;
         uint positionSize = position.size;
         if (trader != position.trader) revert CallerNotOwner();
-        uint interest = calculateInterest(position.size, position.openedAt);
-        int pnl = positionPnl(id) + int(interest);
-        position.size -= dec;
-        position.value -= getPairPrice(position.pair) * dec;
-        // pay interest
-        _payInterest(trader, interest);
-        position.openedAt = block.timestamp;
-        uint percentageDecrease = dec * DECIMAL / positionSize;
-        if(pnl > 0) {
-            uint amount = uint(pnl) * percentageDecrease / DECIMAL;
-            gho.safeTransfer(address(collateralBank), amount);
-            collaterals += amount;
-            myCollateral[trader] += amount;
-        } else if (pnl < 0) {
-            uint amount = uint(-1 * pnl) * percentageDecrease / DECIMAL;
-            collateralBank.withdraw(address(this), amount);
-            collaterals -= amount;
-            myCollateral[trader] -= amount;
+        if(positionSize == dec) {
+            _closePosition(id);
+        } else {
+            uint interest = calculateInterest(position.size, position.openedAt);
+            int pnl = positionPnl(id) + int(interest);
+            position.size -= dec;
+            position.value -= getPairPrice(position.pair) * dec;
+            // pay interest
+            _payInterest(trader, interest);
+            position.openedAt = block.timestamp;
+            uint percentageDecrease = dec * DECIMAL / positionSize;
+            if(pnl > 0) {
+                uint amount = uint(pnl) * percentageDecrease / DECIMAL;
+                gho.safeTransfer(address(collateralBank), amount);
+                collaterals += amount;
+                myCollateral[trader] += amount;
+            } else if (pnl < 0) {
+                uint amount = uint(-1 * pnl) * percentageDecrease / DECIMAL;
+                collateralBank.withdraw(address(this), amount);
+                collaterals -= amount;
+                myCollateral[trader] -= amount;
+            }
+            // reduce positions
+            _reducePositions(position.pair, position.size, position.value, position.isLong);
+            emit PositionSizeDecrease(id, dec);
         }
-        // reduce positions
-        _reducePositions(position.pair, position.size, position.value, position.isLong);
-        emit PositionSizeIncrease(id, dec);
     }
 
 
@@ -502,7 +507,7 @@ contract PerpTrades is ERC4626, Ownable {
         uint [] memory positionIds = myPositionIds[position.trader];
 
         for (uint i = 0; i < positionIds.length; ++i) {
-            if (positionIds[i] == positionId) {
+            if (positionIds[i] == _positionId) {
                 myPositionIds[position.trader][i] = positionIds[positionIds.length - 1];
                 myPositionIds[position.trader].pop();
                 break;
@@ -510,7 +515,7 @@ contract PerpTrades is ERC4626, Ownable {
         }
 
 
-        emit PositionClosed(positionId, position.pair, position.trader, position.size);
+        emit PositionClosed(_positionId, position.pair, position.trader, position.size);
         
     }
 
