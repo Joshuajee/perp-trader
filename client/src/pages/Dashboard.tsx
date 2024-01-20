@@ -75,15 +75,15 @@ function Dashboard() {
                         <div className="">
                             <div className="flex justify-between ">
                                 <p className="text-md">Leverage</p>
-                                <p className="text-nd text-white">{Number(leverage)}x</p>
+                                <p className="text-nd text-white">{leverage ? Number(leverage) + "x" : ""}</p>
                             </div>
                             <div className="flex justify-between  gap-2">
                                 <p className="text-md">Max Leverage</p>
-                                <p className="text-nd text-white">{Number(maxLeverage)}x</p>
+                                <p className="text-nd text-white">{maxLeverage ? Number(maxLeverage) + "x" : ""}</p>
                             </div>
                             <div className="flex justify-between  gap-2">
                                 <p className="text-md">Interest Rate</p>
-                                <p className="text-nd text-white">{Number(interestRate)}%</p>
+                                <p className="text-nd text-white">{interestRate ? Number(interestRate) + "%" : ""}</p>
                             </div>
                         </div>
                     </div>
