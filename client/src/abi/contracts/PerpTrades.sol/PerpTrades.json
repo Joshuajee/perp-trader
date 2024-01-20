@@ -27,6 +27,11 @@
   },
   {
     "inputs": [],
+    "name": "CallerNotOwner",
+    "type": "error"
+  },
+  {
+    "inputs": [],
     "name": "CannotClosePositionYouDonotOwn",
     "type": "error"
   },
@@ -830,6 +835,24 @@
         "type": "bool"
       }
     ],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "uint256",
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "dec",
+        "type": "uint256"
+      }
+    ],
+    "name": "decreasePositionSize",
+    "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
   },
