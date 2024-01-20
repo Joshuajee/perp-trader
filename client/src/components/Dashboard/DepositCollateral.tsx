@@ -29,6 +29,9 @@ export function DepositCollateral() {
         })
         //@ts-ignore
         const approvalHash = await walletClient.writeContract(approvalRequest)
+        await publicClient.waitForTransactionReceipt(
+            { hash: approvalHash }
+        )
 
     }
 
@@ -49,7 +52,9 @@ export function DepositCollateral() {
             })
             //@ts-ignore
             const hash = await walletClient.writeContract(request)
-            console.log(hash, "transaction completed")
+            await publicClient.waitForTransactionReceipt(
+                { hash }
+            )
         } catch (error) {
             // console.error("Error simulating contract:", error.message);
             if (error instanceof ContractFunctionExecutionError) {
@@ -83,7 +88,9 @@ export function DepositCollateral() {
             })
             //@ts-ignore
             const hash = await walletClient.writeContract(request)
-            console.log(hash, "transaction completed")
+            await publicClient.waitForTransactionReceipt(
+                { hash }
+            )
         } catch (error) {
             // console.error("Error simulating contract:", error.message);
             if (error instanceof ContractFunctionExecutionError) {

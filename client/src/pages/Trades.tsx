@@ -43,7 +43,9 @@ function Trades() {
             })
             //@ts-ignore
             const hash = await walletClient.writeContract(request)
-            console.log(hash, "transaction completed")
+            await publicClient.waitForTransactionReceipt(
+                { hash }
+            )
         } catch (error) {
             if (error instanceof ContractFunctionExecutionError) {
                 toast.error(error.shortMessage);

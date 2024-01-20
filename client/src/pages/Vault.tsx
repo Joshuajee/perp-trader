@@ -72,6 +72,9 @@ export default function Vault() {
         })
         //@ts-ignore
         const approvalHash = await walletClient.writeContract(approvalRequest)
+        await publicClient.waitForTransactionReceipt(
+            { hash: approvalHash }
+        )
 
     }
 
@@ -91,6 +94,9 @@ export default function Vault() {
             })
             //@ts-ignore
             const hash = await walletClient.writeContract(request)
+            await publicClient.waitForTransactionReceipt(
+                { hash: hash }
+            )
         } catch (error) {
             if (error instanceof ContractFunctionExecutionError) {
                 toast.error(error.shortMessage);
@@ -123,7 +129,9 @@ export default function Vault() {
             })
             //@ts-ignore
             const hash = await walletClient.writeContract(request)
-            console.log(hash, "transaction completed")
+            await publicClient.waitForTransactionReceipt(
+                { hash: hash }
+            )
         } catch (error) {
             if (error instanceof ContractFunctionExecutionError) {
                 toast.error(error.shortMessage);

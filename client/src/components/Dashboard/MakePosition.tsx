@@ -119,7 +119,9 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
 
             //@ts-ignore
             const hash = await walletClient.writeContract(request)
-            console.log(hash, "transaction completed")
+            await publicClient.waitForTransactionReceipt(
+                { hash }
+            )
             //reset form leaving pair
             form.current && form.current.reset()
             setFormData({

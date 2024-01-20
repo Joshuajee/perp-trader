@@ -66,7 +66,9 @@ export function Positions() {
 
             //@ts-ignore
             const hash = await walletClient.writeContract(request)
-            console.log(hash, "transaction completed")
+            await publicClient.waitForTransactionReceipt(
+                { hash }
+            )
         } catch (error) {
             if (error instanceof ContractFunctionExecutionError) {
                 toast.error(error.shortMessage);
@@ -97,7 +99,9 @@ export function Positions() {
 
                 //@ts-ignore
                 const hash = await walletClient.writeContract(request)
-                console.log(hash, "transaction completed")
+                await publicClient.waitForTransactionReceipt(
+                    { hash }
+                )
             } catch (error) {
                 if (error instanceof ContractFunctionExecutionError) {
                     toast.error(error.shortMessage);
@@ -122,7 +126,9 @@ export function Positions() {
 
                 //@ts-ignore
                 const hash = await walletClient.writeContract(request)
-                console.log(hash, "transaction completed")
+                await publicClient.waitForTransactionReceipt(
+                    { hash }
+                )
             } catch (error) {
                 // console.error("Error simulating contract:", error.message);
                 if (error instanceof ContractFunctionExecutionError) {
