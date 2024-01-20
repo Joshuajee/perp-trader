@@ -12,11 +12,4 @@ npx hardhat node
 npx hardhat run scripts/deploy.ts
 ```
 
-
-0xb0f05d25e41fbc2b52013099ed9616f1206ae21b
-
-// "viem": "1.15.1"
-
-
-
-// 0xdc0c61e97ffcd248dd9b4ebab4dbb5c8d0b62da0
+PerpTrader:  0xdc7e8500c6550a2590a0cf3baa3609b117b415c6

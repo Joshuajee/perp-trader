@@ -10,7 +10,7 @@ async function main() {
 
   const gho = "0xc4bF5CbDaBE595361438F8c6a187bDc330539c60"
 
-  const { ghoToken, btc, eth, link, forth }  = tokenSymbols()
+  const { ghoToken, btc, eth, xau, eur }  = tokenSymbols()
 
   console.log("-------------------------------------------------------------------")
 
@@ -24,9 +24,9 @@ async function main() {
 
   const ethPriceFeeds = "0x694AA1769357215DE4FAC081bf1f309aDC325306"
 
-  const linkPriceFeeds = "0xc59E3633BAAC79493d908e63626716e204A45EdF"
+  const xauPriceFeeds = "0xC5981F461d74c46eB4b0CF3f4Ec79f025573B0Ea"
 
-  const forthPriceFeeds = "0x070bF128E88A4520b3EfA65AB1e4Eb6F0F9E6632"
+  const eurPriceFeeds = "0x1a81afB8146aeFfCFc5E50e8479e826E7D55b910"
 
   console.log("-------------------------------------------------------------------")
 
@@ -36,9 +36,9 @@ async function main() {
 
   console.log("ETH Price Feeds:   ", ethPriceFeeds)
 
-  console.log("LINK Price Feeds:  ", linkPriceFeeds)
+  console.log("XAU Price Feeds:  ", xauPriceFeeds)
 
-  console.log("FORTH Price Feeds: ", forthPriceFeeds)
+  console.log("EUR Price Feeds: ", eurPriceFeeds)
 
   console.log("-------------------------------------------------------------------")
 
@@ -52,9 +52,9 @@ async function main() {
 
   await perpTrader.write.addPriceFeed([eth, ethPriceFeeds])
 
-  await perpTrader.write.addPriceFeed([link, linkPriceFeeds])
+  await perpTrader.write.addPriceFeed([xau, xauPriceFeeds])
 
-  await perpTrader.write.addPriceFeed([forth, forthPriceFeeds])
+  await perpTrader.write.addPriceFeed([eur, eurPriceFeeds])
 
   console.log("PerpTrader Deployed")
 
@@ -62,7 +62,7 @@ async function main() {
 
   console.log("-------------------------------------------------------------------")
 
-  await depositLiquidity(gho, perpTrader.address, amount)
+  //await depositLiquidity(gho, perpTrader.address, amount)
 
   await perpTrader.write.addPair([
     {
@@ -74,51 +74,38 @@ async function main() {
   await perpTrader.write.addPair([
     {
       baseCurrency: btc, 
-      quoteCurrency: link
+      quoteCurrency: xau
     }]
   )
 
   await perpTrader.write.addPair([
     {
       baseCurrency: eth, 
-      quoteCurrency: link
+      quoteCurrency: xau
     }]
   )
 
   await perpTrader.write.addPair([
     {
       baseCurrency: btc, 
-      quoteCurrency: forth
+      quoteCurrency: eur
     }]
   )
 
   await perpTrader.write.addPair([
     {
       baseCurrency: eth, 
-      quoteCurrency: forth
+      quoteCurrency: eur
     }]
   )
 
   await perpTrader.write.addPair([
     {
-      baseCurrency: link, 
-      quoteCurrency: forth
+      baseCurrency: xau, 
+      quoteCurrency: eur
     }]
   )
 
-  await perpTrader.write.addPair([
-    {
-      baseCurrency: btc, 
-      quoteCurrency: ghoToken
-    }]
-  )
-
-  await perpTrader.write.addPair([
-    {
-      baseCurrency: eth, 
-      quoteCurrency: ghoToken
-    }]
-  )
 
 }
 

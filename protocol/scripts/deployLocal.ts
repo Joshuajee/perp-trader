@@ -12,7 +12,7 @@ async function main() {
 
   const { gho }  = await deployTokens()
 
-  const { ghoToken, btc, eth, link, forth }  = tokenSymbols()
+  const { ghoToken, btc, eth, xau, eur }  = tokenSymbols()
 
   console.log("-------------------------------------------------------------------")
 
@@ -24,7 +24,7 @@ async function main() {
 
   const priceAggregator = await deployPriceAggregator()
 
-  console.log("Chainlink Price Aggregator Deployed")
+  console.log("Chainxau Price Aggregator Deployed")
 
   console.log("Tokens Deployed")
 
@@ -34,9 +34,9 @@ async function main() {
 
   console.log("ETH Price Feeds:   ", priceAggregator.ethPriceFeeds.address)
 
-  console.log("LINK Price Feeds:  ", priceAggregator.linkPriceFeeds.address)
+  console.log("XAU Price Feeds:  ", priceAggregator.xauPriceFeeds.address)
 
-  console.log("FORTH Price Feeds: ", priceAggregator.forthPriceFeeds.address)
+  console.log("EUR Price Feeds: ", priceAggregator.eurPriceFeeds.address)
 
   console.log("-------------------------------------------------------------------")
 
@@ -64,59 +64,42 @@ async function main() {
   await perpTrader.write.addPair([
     {
       baseCurrency: btc, 
-      quoteCurrency: link
+      quoteCurrency: xau
     }]
   )
 
   await perpTrader.write.addPair([
     {
       baseCurrency: eth, 
-      quoteCurrency: link
+      quoteCurrency: xau
     }]
   )
 
   await perpTrader.write.addPair([
     {
       baseCurrency: btc, 
-      quoteCurrency: forth
+      quoteCurrency: eur
     }]
   )
 
   await perpTrader.write.addPair([
     {
       baseCurrency: eth, 
-      quoteCurrency: forth
+      quoteCurrency: eur
     }]
   )
 
   await perpTrader.write.addPair([
     {
-      baseCurrency: link, 
-      quoteCurrency: forth
-    }]
-  )
-
-  await perpTrader.write.addPair([
-    {
-      baseCurrency: btc, 
-      quoteCurrency: ghoToken
-    }]
-  )
-
-  await perpTrader.write.addPair([
-    {
-      baseCurrency: eth, 
-      quoteCurrency: ghoToken
+      baseCurrency: xau, 
+      quoteCurrency: eur
     }]
   )
 
 
-  await perpTrader.write.addPriceFeed([link, priceAggregator.linkPriceFeeds.address])
+  await perpTrader.write.addPriceFeed([xau, priceAggregator.xauPriceFeeds.address])
 
-  await perpTrader.write.addPriceFeed([forth, priceAggregator.forthPriceFeeds.address])
-  
-
-
+  await perpTrader.write.addPriceFeed([eur, priceAggregator.eurPriceFeeds.address])
 
 }
 
