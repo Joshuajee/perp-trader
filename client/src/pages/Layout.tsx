@@ -1,6 +1,7 @@
 import { Outlet, Link, useLocation } from "react-router-dom";
 import logo from "@assets/images/logo.png"
-import { ConnectKitButton } from "connectkit";
+// import { ConnectKitButton } from "connectkit";
+import CustomConnectButton from "@components/Shared/CustomConnectButton";
 
 const Layout = () => {
     const location = useLocation()
@@ -20,7 +21,8 @@ const Layout = () => {
                     </ul>
                 </div>
                 <div className=" flex items-center justify-end">
-                    <ConnectKitButton />
+                    {/* <ConnectKitButton /> */}
+                    <CustomConnectButton />
                 </div>
             </nav>
 

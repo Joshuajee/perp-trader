@@ -6,6 +6,7 @@ import { useAccount, useContractRead } from "wagmi";
 import useCurrentChainId from "@hooks/useCurrentChainId"
 import { parseEther } from 'viem';
 import { Oval } from 'react-loader-spinner';
+import CustomConnectButton from '@components/Shared/CustomConnectButton';
 
 interface FormData {
     // Define form fields
@@ -26,7 +27,7 @@ interface IPair {
 }
 
 export function MakePosition({ authPair, setAuthPair }: { authPair: number, setAuthPair: (id: number) => void }) {
-    const { address } = useAccount();
+    const { address, isConnected } = useAccount();
     const currentChainId = useCurrentChainId()
     const [pairPrice, setPairPrice] = useState<string | null>(null)
     const form = useRef<HTMLFormElement>(null)
@@ -167,7 +168,7 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
                 <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
             </div>
 
-            <div className="flex gap-6 justify-between ">
+            {isConnected && <div className="flex gap-6 justify-between ">
                 <button disabled={isLoadingShort} onClick={() => openPosition(false)} type='button' className="bg-red-500 w-1/2 inline-flex items-center justify-center px-4 py-2 border border-red-500 rounded cursor-pointer hover:bg-red-500">
                     {!isLoadingShort && <span className=" text-white">Short </span>} <Oval visible={isLoadingShort} height={20} color='#fff' secondaryColor='#000' />
                 </button>
@@ -175,7 +176,8 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
                 <button disabled={isLoadingLong} onClick={() => openPosition(true)} type='button' className="bg-green-500 w-1/2 inline-flex items-center justify-center px-4 py-2 border border-green-500 rounded cursor-pointer hover:bg-green-500">
                     {!isLoadingLong && <span className=" text-white">Long </span>} <Oval visible={isLoadingLong} height={20} color='#fff' secondaryColor='#000' />
                 </button>
-            </div>
+            </div>}
+            {!isConnected && <CustomConnectButton />}
 
         </form>
     )
