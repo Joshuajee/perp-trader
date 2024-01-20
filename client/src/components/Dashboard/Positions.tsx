@@ -3,9 +3,10 @@ import useCurrentChainId from "@hooks/useCurrentChainId"
 import { useAccount, useContractRead } from "wagmi";
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 import { publicClient, walletClient } from '@utils/helpers';
-import { formatEther, parseEther } from 'viem';
+import { ContractFunctionExecutionError, InsufficientFundsError, formatEther, parseEther } from 'viem';
 import { useRef, useState } from 'react';
 import { Oval } from 'react-loader-spinner';
+import { toast } from 'react-toastify';
 
 
 interface IPosition {
@@ -54,17 +55,29 @@ export function Positions() {
     const closePosition = async (id: number) => {
         setIsLoadingClose(true)
         setClosePositionId(id)
-        const { request } = await publicClient.simulateContract({
-            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
-            abi: perpAbi,
-            functionName: 'closePosition',
-            args: [id],
-            account: address,
-        })
+        try {
+            const { request } = await publicClient.simulateContract({
+                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                abi: perpAbi,
+                functionName: 'closePosition',
+                args: [id],
+                account: address,
+            })
 
-        //@ts-ignore
-        const hash = await walletClient.writeContract(request)
-        console.log(hash, "transaction completed")
+            //@ts-ignore
+            const hash = await walletClient.writeContract(request)
+            console.log(hash, "transaction completed")
+        } catch (error) {
+            if (error instanceof ContractFunctionExecutionError) {
+                toast.error(error.shortMessage);
+            } else if (error instanceof InsufficientFundsError) {
+                toast.error("Insufficient funds for transaction.");
+            } else {
+                // Handle other error types 
+                //@ts-ignore
+                toast.error(error.shortMessage)
+            }
+        }
         setIsLoadingClose(false)
         setClosePositionId(null)
     }
@@ -73,30 +86,55 @@ export function Positions() {
         setIsLoading(true)
 
         if (modal == 1) {
-            const { request } = await publicClient.simulateContract({
-                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
-                abi: perpAbi,
-                functionName: 'decreasePositionSize',
-                args: [position, parseEther(String(sizeAmount), "wei")],
-                account: address,
-            })
+            try {
+                const { request } = await publicClient.simulateContract({
+                    address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                    abi: perpAbi,
+                    functionName: 'decreasePositionSize',
+                    args: [position, parseEther(String(sizeAmount), "wei")],
+                    account: address,
+                })
 
-            //@ts-ignore
-            const hash = await walletClient.writeContract(request)
-            console.log(hash, "transaction completed")
+                //@ts-ignore
+                const hash = await walletClient.writeContract(request)
+                console.log(hash, "transaction completed")
+            } catch (error) {
+                if (error instanceof ContractFunctionExecutionError) {
+                    toast.error(error.shortMessage);
+                } else if (error instanceof InsufficientFundsError) {
+                    toast.error("Insufficient funds for transaction.");
+                } else {
+                    // Handle other error types 
+                    //@ts-ignore
+                    toast.error(error.shortMessage)
+                }
+            }
 
         } else if (modal == 2) {
-            const { request } = await publicClient.simulateContract({
-                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
-                abi: perpAbi,
-                functionName: 'increasePositionSize',
-                args: [position, parseEther(String(sizeAmount), "wei")],
-                account: address,
-            })
+            try {
+                const { request } = await publicClient.simulateContract({
+                    address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                    abi: perpAbi,
+                    functionName: 'increasePositionSize',
+                    args: [position, parseEther(String(sizeAmount), "wei")],
+                    account: address,
+                })
 
-            //@ts-ignore
-            const hash = await walletClient.writeContract(request)
-            console.log(hash, "transaction completed")
+                //@ts-ignore
+                const hash = await walletClient.writeContract(request)
+                console.log(hash, "transaction completed")
+            } catch (error) {
+                // console.error("Error simulating contract:", error.message);
+                if (error instanceof ContractFunctionExecutionError) {
+                    toast.error(error.shortMessage);
+                } else if (error instanceof InsufficientFundsError) {
+                    toast.error("Insufficient funds for transaction.");
+                } else {
+                    // Handle other error types 
+                    //@ts-ignore
+                    toast.error(error.shortMessage)
+                }
+            }
 
         }
 

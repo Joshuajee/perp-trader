@@ -4,9 +4,11 @@ import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 // import tokenAbi from "@abis/contracts/mocks/MockERC20.sol/MockERC20.json"
 import { useAccount, useContractRead } from "wagmi";
 import useCurrentChainId from "@hooks/useCurrentChainId"
-import { parseEther } from 'viem';
+import { ContractFunctionExecutionError, InsufficientFundsError, parseEther } from 'viem';
 import { Oval } from 'react-loader-spinner';
 import CustomConnectButton from '@components/Shared/CustomConnectButton';
+import { ToastContainer, toast } from 'react-toastify';
+
 
 interface FormData {
     // Define form fields
@@ -106,28 +108,43 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
         }
 
 
-        const { request } = await publicClient.simulateContract({
-            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
-            abi: perpAbi,
-            functionName: 'openPosition',
-            args: [formData.pair, parseEther(String(formData.sizeAmount), "wei"), formData.collateralAmount, position],
-            account: address,
-        })
+        try {
+            const { request } = await publicClient.simulateContract({
+                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                abi: perpAbi,
+                functionName: 'openPosition',
+                args: [formData.pair, parseEther(String(formData.sizeAmount), "wei"), formData.collateralAmount, position],
+                account: address,
+            })
 
-        //@ts-ignore
-        const hash = await walletClient.writeContract(request)
-        //reset form leaving pair
-        form.current && form.current.reset()
-        setFormData({
-            pair: {
-                baseCurrency: formData.pair.baseCurrency,
-                quoteCurrency: formData.pair.quoteCurrency
-            },
-            sizeAmount: null,
-            collateralAmount: 0,
-            position: null
-        })
-        console.log(hash, "transaction completed")
+            //@ts-ignore
+            const hash = await walletClient.writeContract(request)
+            console.log(hash, "transaction completed")
+            //reset form leaving pair
+            form.current && form.current.reset()
+            setFormData({
+                pair: {
+                    baseCurrency: formData.pair.baseCurrency,
+                    quoteCurrency: formData.pair.quoteCurrency
+                },
+                sizeAmount: null,
+                collateralAmount: 0,
+                position: null
+            })
+        } catch (error) {
+            // console.error("Error simulating contract:", error.message);
+            if (error instanceof ContractFunctionExecutionError) {
+
+                toast.error(error.shortMessage);
+            } else if (error instanceof InsufficientFundsError) {
+                toast.error("Insufficient funds for transaction.");
+            } else {
+                // Handle other error types 
+                //@ts-ignore
+                toast.error(error.shortMessage)
+            }
+        }
+
         if (position) {
             setIsLoadingLong(false)
         } else {

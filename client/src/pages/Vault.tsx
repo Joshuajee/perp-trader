@@ -3,12 +3,13 @@ import { TbTransferIn, TbTransferOut } from "react-icons/tb";
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 import tokenAbi from "@abis/contracts/mocks/MockERC20.sol/MockERC20.json"
 import { useAccount, useContractRead } from "wagmi";
-import { formatEther, parseEther } from "viem"
+import { ContractFunctionExecutionError, InsufficientFundsError, formatEther, parseEther } from "viem"
 import { useState } from "react";
 import { publicClient, walletClient } from "@utils/helpers";
 import useCurrentChainId from "@hooks/useCurrentChainId";
 import { Oval } from "react-loader-spinner";
 import CustomConnectButton from "@components/Shared/CustomConnectButton";
+import { toast } from "react-toastify";
 
 export default function Vault() {
     const { address, isConnected } = useAccount();
@@ -63,16 +64,28 @@ export default function Vault() {
         setIsLoadingDeposit(true)
         const weiValue = parseEther(`${depositVolume}`, "wei")
 
-        await approve(weiValue)
-        const { request } = await publicClient.simulateContract({
-            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
-            abi: perpAbi,
-            functionName: 'deposit',
-            args: [weiValue],
-            account: address,
-        })
-        //@ts-ignore
-        const hash = await walletClient.writeContract(request)
+        try {
+            await approve(weiValue)
+            const { request } = await publicClient.simulateContract({
+                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                abi: perpAbi,
+                functionName: 'deposit',
+                args: [weiValue],
+                account: address,
+            })
+            //@ts-ignore
+            const hash = await walletClient.writeContract(request)
+        } catch (error) {
+            if (error instanceof ContractFunctionExecutionError) {
+                toast.error(error.shortMessage);
+            } else if (error instanceof InsufficientFundsError) {
+                toast.error("Insufficient funds for transaction.");
+            } else {
+                // Handle other error types 
+                //@ts-ignore
+                toast.error(error.shortMessage)
+            }
+        }
         setDepositVolume(null)
         setIsLoadingDeposit(false)
     }
@@ -84,16 +97,28 @@ export default function Vault() {
 
         const weiValue = parseEther(`${withdrawalVolume}`, "wei")
 
-        const { request } = await publicClient.simulateContract({
-            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
-            abi: perpAbi,
-            functionName: 'withdraw',
-            args: [weiValue],
-            account: address,
-        })
-        //@ts-ignore
-        const hash = await walletClient.writeContract(request)
-        console.log(hash, "transaction completed")
+        try {
+            const { request } = await publicClient.simulateContract({
+                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                abi: perpAbi,
+                functionName: 'withdraw',
+                args: [weiValue],
+                account: address,
+            })
+            //@ts-ignore
+            const hash = await walletClient.writeContract(request)
+            console.log(hash, "transaction completed")
+        } catch (error) {
+            if (error instanceof ContractFunctionExecutionError) {
+                toast.error(error.shortMessage);
+            } else if (error instanceof InsufficientFundsError) {
+                toast.error("Insufficient funds for transaction.");
+            } else {
+                // Handle other error types 
+                //@ts-ignore
+                toast.error(error.shortMessage)
+            }
+        }
         setWithdrawalVolume(null)
         setIsLoadingWithdrawal(false)
     }

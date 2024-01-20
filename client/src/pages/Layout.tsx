@@ -2,12 +2,14 @@ import { Outlet, Link, useLocation } from "react-router-dom";
 import logo from "@assets/images/logo.png"
 // import { ConnectKitButton } from "connectkit";
 import CustomConnectButton from "@components/Shared/CustomConnectButton";
+import { ToastContainer } from "react-toastify";
 
 const Layout = () => {
     const location = useLocation()
 
     return (
         <>
+            <ToastContainer autoClose={8000} />
             <nav className="h-16 px-5 flex justify-between border-b border-primary_4">
                 <div className="w-[70%] h-full flex gap-7 items-center">
                     <Link to="/">

@@ -1,12 +1,13 @@
 import { TbTransferIn } from "react-icons/tb";
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 import tokenAbi from "@abis/contracts/mocks/MockERC20.sol/MockERC20.json"
-import { parseEther } from "viem";
+import { ContractFunctionExecutionError, InsufficientFundsError, parseEther } from "viem";
 import { useState } from "react";
 import { publicClient, walletClient } from "@utils/helpers";
 import { useAccount } from "wagmi";
 import { Oval } from "react-loader-spinner";
 import CustomConnectButton from "@components/Shared/CustomConnectButton";
+import { toast } from "react-toastify";
 
 
 export function DepositCollateral() {
@@ -36,18 +37,32 @@ export function DepositCollateral() {
         setIsLoadingDeposit(true)
         const weiValue = parseEther(amount, "wei")
 
-        await approve(weiValue)
+        try {
+            await approve(weiValue)
 
-        const { request } = await publicClient.simulateContract({
-            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
-            abi: perpAbi,
-            functionName: 'addCollateral',
-            args: [weiValue],
-            account: address,
-        })
-        //@ts-ignore
-        const hash = await walletClient.writeContract(request)
-        console.log(hash, "transaction completed")
+            const { request } = await publicClient.simulateContract({
+                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                abi: perpAbi,
+                functionName: 'addCollateral',
+                args: [weiValue],
+                account: address,
+            })
+            //@ts-ignore
+            const hash = await walletClient.writeContract(request)
+            console.log(hash, "transaction completed")
+        } catch (error) {
+            // console.error("Error simulating contract:", error.message);
+            if (error instanceof ContractFunctionExecutionError) {
+                console.log(error.shortMessage)
+                toast.error(error.shortMessage);
+            } else if (error instanceof InsufficientFundsError) {
+                toast.error("Insufficient funds for transaction.");
+            } else {
+                // Handle other error types 
+                //@ts-ignore
+                toast.error(error.shortMessage)
+            }
+        }
         setAmount("")
         setIsLoadingDeposit(false)
     }
@@ -58,16 +73,29 @@ export function DepositCollateral() {
 
         const weiValue = parseEther(amount, "wei")
 
-        const { request } = await publicClient.simulateContract({
-            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
-            abi: perpAbi,
-            functionName: 'removeCollateral',
-            args: [weiValue],
-            account: address,
-        })
-        //@ts-ignore
-        const hash = await walletClient.writeContract(request)
-        console.log(hash, "transaction completed")
+        try {
+            const { request } = await publicClient.simulateContract({
+                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                abi: perpAbi,
+                functionName: 'removeCollateral',
+                args: [weiValue],
+                account: address,
+            })
+            //@ts-ignore
+            const hash = await walletClient.writeContract(request)
+            console.log(hash, "transaction completed")
+        } catch (error) {
+            // console.error("Error simulating contract:", error.message);
+            if (error instanceof ContractFunctionExecutionError) {
+                toast.error(error.shortMessage);
+            } else if (error instanceof InsufficientFundsError) {
+                toast.error("Insufficient funds for transaction.");
+            } else {
+                // Handle other error types 
+                //@ts-ignore
+                toast.error(error.shortMessage)
+            }
+        }
         setAmount("")
         setIsLoadingWithdrawal(false)
     }

@@ -2,10 +2,11 @@ import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 import { LuCandlestickChart } from "react-icons/lu";
 import { useAccount, useContractRead } from "wagmi";
 import useCurrentChainId from "@hooks/useCurrentChainId";
-import { formatEther } from "viem";
+import { ContractFunctionExecutionError, InsufficientFundsError, formatEther } from "viem";
 import { publicClient, walletClient } from "@utils/helpers";
 import { useState } from "react";
 import { Oval } from "react-loader-spinner";
+import { toast } from "react-toastify";
 
 interface ITrades {
     collateral: bigint,
@@ -31,17 +32,31 @@ function Trades() {
     })
 
     const liquidate = async (trader: string) => {
-        console.log(trader)
-        const { request } = await publicClient.simulateContract({
-            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
-            abi: perpAbi,
-            functionName: 'liquidateTrader',
-            args: [trader],
-            account: address,
-        })
-        //@ts-ignore
-        const hash = await walletClient.writeContract(request)
-        console.log(hash, "transaction completed")
+        setIsLoading(true)
+        try {
+            const { request } = await publicClient.simulateContract({
+                address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+                abi: perpAbi,
+                functionName: 'liquidateTrader',
+                args: [trader],
+                account: address,
+            })
+            //@ts-ignore
+            const hash = await walletClient.writeContract(request)
+            console.log(hash, "transaction completed")
+        } catch (error) {
+            if (error instanceof ContractFunctionExecutionError) {
+                toast.error(error.shortMessage);
+            } else if (error instanceof InsufficientFundsError) {
+                toast.error("Insufficient funds for transaction.");
+            } else {
+                // Handle other error types 
+                //@ts-ignore
+                toast.error(error.shortMessage)
+            }
+        }
+
+        setIsLoading(false)
     }
 
 
