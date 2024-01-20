@@ -90,8 +90,8 @@ export function DepositCollateral() {
                         {!isLoadingDeposit && <span className=" text-white">Deposit </span>} <Oval visible={isLoadingDeposit} height={20} color='#fff' secondaryColor='#000' />
                     </button>
                 </div>}
-                {!isConnected && <CustomConnectButton />}
             </div>
+            {!isConnected && <CustomConnectButton />}
 
         </form>
     )
