@@ -4,6 +4,7 @@ import { useContractRead } from "wagmi";
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 import { publicClient } from "@utils/helpers";
 import { ethers } from "ethers";
+import { formatEther } from "viem";
 
 
 interface IPair {
@@ -42,18 +43,34 @@ export function PriceSummary({ authPair, setAuthPair }: { authPair: number, setA
         const val = Number(data) / Math.pow(10, 38)
         setPairPrice(val.toFixed(4))
     }
-    const getOpenLongInterest = async (pair: IPair) => {
-        // Encode data using Ethereum ABI encoding
-        const encodedData = ethers.utils.defaultAbiCoder.encode(
-            ['string', 'string'],
-            [pair.baseCurrency, pair.quoteCurrency]
-        );
 
+    const getPairKey = async (pair: IPair) => {
+        const data = await publicClient.readContract({
+            address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
+            abi: perpAbi,
+            functionName: 'getPairKey',
+            args: [pair]
+        })
+
+        return (data)
+    }
+    const getOpenLongInterest = async (pair: IPair) => {
+
+        const hash = await getPairKey(pair)
+
+        // Encode data using Ethereum ABI encoding
+        // const encodedData = ethers.utils.defaultAbiCoder.encode(
+        //     ['string', 'string'],
+        //     [pair.baseCurrency.toLowerCase(), pair.quoteCurrency.toLowerCase()]
+        // );
+
+
+        // console.log(ethers.utils.keccak256(encodedData))
         const data = await publicClient.readContract({
             address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
             abi: perpAbi,
             functionName: 'openLongInterestInGho',
-            args: [ethers.utils.keccak256(encodedData)]
+            args: [hash]
         })
 
         // @ts-ignore
@@ -61,17 +78,18 @@ export function PriceSummary({ authPair, setAuthPair }: { authPair: number, setA
 
     }
     const getOpenShortInterest = async (pair: IPair) => {
+        const hash = await getPairKey(pair)
         // Encode data using Ethereum ABI encoding
-        const encodedData = ethers.utils.defaultAbiCoder.encode(
-            ['string', 'string'],
-            [pair.baseCurrency, pair.quoteCurrency]
-        );
+        // const encodedData = ethers.utils.defaultAbiCoder.encode(
+        //     ['string', 'string'],
+        //     [pair.baseCurrency, pair.quoteCurrency]
+        // );
 
         const data = await publicClient.readContract({
             address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
             abi: perpAbi,
             functionName: 'openShortInterestInGho',
-            args: [ethers.utils.keccak256(encodedData)]
+            args: [hash]
         })
 
         // @ts-ignore
@@ -84,6 +102,7 @@ export function PriceSummary({ authPair, setAuthPair }: { authPair: number, setA
             getPairPrice(pairsData[pair])
             getOpenLongInterest(pairsData[pair])
             getOpenShortInterest(pairsData[pair])
+
         }
     }, [pairsData])
 
@@ -127,11 +146,11 @@ export function PriceSummary({ authPair, setAuthPair }: { authPair: number, setA
             </div>
             <div className="h-full w-[15%] flex flex-col justify-center font-semibold">
                 <p className="text-white text-md"> Long Interest</p>
-                <p className=" text-sm">{longInterest ? String(longInterest) : 0}% </p>
+                <p className=" text-sm">GHO {longInterest ? Number(formatEther(longInterest)).toFixed(1) : 0}</p>
             </div>
             <div className="h-full w-[15%] flex flex-col justify-center font-semibold">
                 <p className="text-white text-md"> Short Interest</p>
-                <p className=" text-sm">{shortInterest ? String(shortInterest) : 0}%</p>
+                <p className=" text-sm">GHO {shortInterest ? Number(formatEther(shortInterest)).toFixed(1) : 0}</p>
             </div>
         </div>
     )
