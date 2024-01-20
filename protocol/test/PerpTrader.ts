@@ -261,13 +261,15 @@ describe("PerpTrader", function () {
       // Increase BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
 
+      console.log(await perpTrader.read.totalPnL())
+
       const interest1 = await perpTrader.read.calculateInterest([sizeAmount, positionOpenedTime])
 
       expect(await perpTrader.read.totalPnL()).to.be.equal(sizeAmount)
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(sizeAmount - interest1)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(sizeAmount - interest1)
 
-      expect(await perpTrader.read.totalAssets()).to.be.equal(amount - await perpTrader.read.totalPnL())
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount)
 
       // decrease BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
@@ -276,11 +278,13 @@ describe("PerpTrader", function () {
 
       const expectedPnl = -sizeAmount / 2n
 
+      console.log({expectedPnl, interest2})
+
       expect(await perpTrader.read.totalPnL()).to.be.equal(expectedPnl)
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(expectedPnl - interest2)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(expectedPnl - interest2)
 
-      expect(await perpTrader.read.totalAssets()).to.be.equal(amount - await perpTrader.read.totalPnL())
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount)
 
     })
 
@@ -300,7 +304,7 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(0n)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(0n)
 
-      expect(await perpTrader.read.totalAssets()).to.be.equal(amount - await perpTrader.read.totalPnL())
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount)
 
       // Increase BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice/2n])
@@ -311,7 +315,7 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(-sizeAmount - interest1)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(-sizeAmount - interest1)
 
-      expect(await perpTrader.read.totalAssets()).to.be.equal(amount - await perpTrader.read.totalPnL())
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount)
 
       // decrease BTC Price relative to dollar by 50%
       await btcPriceFeeds.write.updateAnswer([btcInitailPrice * 2n])
@@ -324,7 +328,7 @@ describe("PerpTrader", function () {
       expect(await perpTrader.read.traderPnL([user1.account.address])).to.be.equal(expectedPnl - interest2)
       expect(await perpTrader.read.positionPnl([1n])).to.be.equal(expectedPnl - interest2)
 
-      expect(await perpTrader.read.totalAssets()).to.be.equal(amount - await perpTrader.read.totalPnL())
+      expect(await perpTrader.read.totalAssets()).to.be.equal(amount)
       
     })
 
@@ -599,6 +603,45 @@ describe("PerpTrader", function () {
       await expect(perpTrader.read.myPositionIds([user1.account.address, 1n])).rejectedWith("")
 
     })
+
+
+    it("Should close multiple positions", async() => {
+
+      const { perpTrader, gho, btc, eth, user1, btcPriceFeeds, btcInitailPrice } = await loadFixture(deployAndDepositTest)
+
+      const pair = {baseCurrency: btc, quoteCurrency: eth }
+
+      await gho.write.approve([perpTrader.address, collateralAmount])
+
+      await perpTrader.write.openPosition([pair, sizeAmount, collateralAmount, false])
+
+      await perpTrader.write.openPosition([pair, sizeAmount, 0n, false])
+
+      await perpTrader.write.openPosition([pair, sizeAmount, 0n, false])
+
+      await perpTrader.write.openPosition([pair, sizeAmount, 0n, false])
+
+      // Increase BTC Price relative to dollar by 50%
+      await btcPriceFeeds.write.updateAnswer([btcInitailPrice / 2n])
+
+      await perpTrader.write.closePosition([1n])
+
+      await expect(perpTrader.read.myPositionIds([user1.account.address, 3n])).to.be.rejectedWith("")
+
+      await perpTrader.write.closePosition([2n])
+
+      await expect(perpTrader.read.myPositionIds([user1.account.address, 2n])).to.be.rejectedWith("")
+
+      await perpTrader.write.closePosition([3n])
+
+      await expect(perpTrader.read.myPositionIds([user1.account.address, 1n])).to.be.rejectedWith("")
+
+      await perpTrader.write.closePosition([4n])
+
+      await expect(perpTrader.read.myPositionIds([user1.account.address, 0n])).to.be.rejectedWith("")
+
+    })
+
 
 
   })
