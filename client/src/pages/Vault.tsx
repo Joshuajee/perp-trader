@@ -43,6 +43,22 @@ export default function Vault() {
     })
 
 
+    //@ts-ignore
+    const { data: perpBalance }: {
+        data: bigint
+    } = useContractRead({
+        address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
+        abi: perpAbi,
+        functionName: "balanceOf",
+        watch: true,
+        args: [address],
+        chainId: currentChainId,
+        account: address
+    })
+
+    console.log(perpBalance)
+
+
     const approve = async (weiValue: bigint) => {
         //make approval
 
@@ -126,21 +142,26 @@ export default function Vault() {
     return (
         <div className='flex flex-col justify-center gap-8 mt-4'>
             <div className='w-[90%] max-w-[500px] h-24 rounded-xl bg-primary_4 m-auto flex  items-center'>
-                <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
+                <div className='w-[25%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Total Value</p>
                     {/* @ts-ignore */}
-                    <p className='text-lg text-white text-center'>GHO {vaultInfo ? Number(formatEther(vaultInfo[0])).toFixed(2) : ""}</p>
+                    <p className='text-sm text-white text-center'>GHO {vaultInfo ? Number(formatEther(vaultInfo[0])).toFixed(2) : ""}</p>
                 </div>
-                <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
+                <div className='w-[25%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Available Funds</p>
                     {/* @ts-ignore */}
-                    <p className='text-lg text-white text-center'>GHO {vaultInfo ? Number(formatEther(vaultInfo[1])).toFixed(2) : ""}</p>
+                    <p className='text-sm text-white text-center'>GHO {vaultInfo ? Number(formatEther(vaultInfo[1])).toFixed(2) : ""}</p>
                 </div>
 
-                <div className='w-[33.3%] h-full flex flex-col item-center justify-center gap-2'>
+                <div className='w-[25%] h-full flex flex-col item-center justify-center gap-2'>
                     <p className='text-xs text-center font-semibold '>Interest Rate</p>
                     {/* @ts-ignore */}
-                    <p className='text-lg text-white text-center'>{vaultInfo ? vaultInfo[2] : ""}%</p>
+                    <p className='text-sm text-white text-center'>{vaultInfo ? vaultInfo[2] : ""}%</p>
+                </div>
+                <div className='w-[25%] h-full flex flex-col item-center justify-center gap-2'>
+                    <p className='text-xs text-center font-semibold '>PERP-GHO</p>
+                    {/* @ts-ignore */}
+                    <p className='text-sm text-white text-center'>{perpBalance ? Number(formatEther(perpBalance)).toFixed(2) : ""}</p>
                 </div>
             </div>
             <form className='w-[90%] max-w-[500px] p-3 rounded-xl bg-primary_4 m-auto flex flex-col  gap-10 pb-10'>
