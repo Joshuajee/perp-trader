@@ -1,3 +1,4 @@
+import React, { useRef } from 'react';
 import gho from "@assets/icons/gho.png"
 import { TbTransferIn, TbTransferOut } from "react-icons/tb";
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
@@ -10,6 +11,12 @@ import useCurrentChainId from "@hooks/useCurrentChainId";
 import { Oval } from "react-loader-spinner";
 import CustomConnectButton from "@components/Shared/CustomConnectButton";
 import { toast } from "react-toastify";
+import copy from 'clipboard-copy';
+
+
+interface CopyToClipboardProps {
+    text: string;
+}
 
 export default function Vault() {
     const { address, isConnected } = useAccount();
@@ -18,7 +25,14 @@ export default function Vault() {
     const [withdrawalVolume, setWithdrawalVolume] = useState<string | null>(null)
     const [isLoadingDeposit, setIsLoadingDeposit] = useState<boolean>(false)
     const [isLoadingWithdrawal, setIsLoadingWithdrawal] = useState<boolean>(false)
+    const textRef = useRef<HTMLSpanElement>(null);
 
+    const handleCopyClick = () => {
+        if (textRef.current) {
+            copy(textRef.current.innerText);
+            toast.info("copied", { autoClose: 2000 })
+        }
+    };
 
     //@ts-ignore
     const { data: interestRate }: { data: string } = useContractRead({
@@ -180,6 +194,12 @@ export default function Vault() {
                         <input type="number" min={0} value={depositVolume ? depositVolume : ""} onChange={(e) => setDepositVolume(e.target.value)} placeholder="0.0" className="h-full w-[85%] bg-transparent rounded-l-md outline-none focus:ring-0 focus:outline-none text-white px-3 " />
                         <div className="w-[15%] h-full flex items-center text-sm border-l border-primary_2 justify-center">GHO</div>
                     </div>
+
+                    <p className="text-xs py-3 flex justify-between"><span className="font-semibold ">PERP-GHO:</span>
+                        <span ref={textRef} onClick={handleCopyClick} style={{ cursor: 'pointer', textDecoration: 'underline' }}>
+                            {import.meta.env.VITE_PERP_TRADER_ADDRESS}
+                        </span>
+                    </p>
 
                     {isConnected && <button disabled={isLoadingDeposit} onClick={deposit} type="button" className="bg-green-700 text-white w-full py-3 rounded-lg mt-2 flex justify-center">
                         {!isLoadingDeposit && <span className=" text-white">Deposit </span>}
