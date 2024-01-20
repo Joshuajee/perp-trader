@@ -45,7 +45,7 @@ export async function deployPriceAggregator() {
 
 export async function deployTokens() {
 
-    const gho = await viem.deployContract("MockERC20", ["aGho", "aGho"])
+    const gho = await viem.deployContract("MockERC20", ["gho", "gho"])
 
     return { gho }
 }
