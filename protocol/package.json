@@ -4,6 +4,7 @@
     "deploy": "hardhat run --network sepolia scripts/deploy.ts",
     "deploy-local": "hardhat run --network localhost scripts/deployLocal.ts",
     "update-price": "hardhat run --network localhost scripts/updatePriceLocal.ts",
+    "mint-local": "hardhat run --network localhost scripts/mintGhoLocal.ts",
     "deploy-sepolia": "hardhat run --network sepolia scripts/deploySepolia.ts",
     "deploy-mumbai": "hardhat run --network mumbai scripts/deploySepolia.ts",
     "deposit-sepolia": "hardhat run --network sepolia scripts/depositSepolia.ts",
