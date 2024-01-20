@@ -6,7 +6,7 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// const PRIVATE_KEY  = String(process.env.PRIVATE_KEY)
+const PRIVATE_KEY  = String(process.env.PRIVATE_KEY)
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -46,11 +46,7 @@ const config: HardhatUserConfig = {
     },
     sepolia: {
       url: "https://sepolia.drpc.org",
-      // accounts: [ PRIVATE_KEY ]
-    },
-    mumbai: {
-      url: "https://polygon-mumbai.g.alchemy.com/v2/1yHVzG9cEm8g0IJKQA0VO-nczdGW4NgO",
-      // accounts: [ PRIVATE_KEY ]
+      //accounts: [ PRIVATE_KEY ]
     },
   },
 };
