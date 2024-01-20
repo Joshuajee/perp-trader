@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import { useRef } from 'react';
 import gho from "@assets/icons/gho.png"
 import { TbTransferIn, TbTransferOut } from "react-icons/tb";
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
@@ -14,9 +14,6 @@ import { toast } from "react-toastify";
 import copy from 'clipboard-copy';
 
 
-interface CopyToClipboardProps {
-    text: string;
-}
 
 export default function Vault() {
     const { address, isConnected } = useAccount();
@@ -69,9 +66,6 @@ export default function Vault() {
         chainId: currentChainId,
         account: address
     })
-
-    console.log(perpBalance)
-
 
     const approve = async (weiValue: bigint) => {
         //make approval
