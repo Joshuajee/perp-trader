@@ -17,11 +17,11 @@ export async function deployPriceAggregator() {
     const ethDecimal = 8;
     const ethInitailPrice = 339925673n;
 
-    const linkDecimal = 8;
-    const linkInitailPrice = 97906595n;
+    const xauDecimal = 8;
+    const xauInitailPrice = 97906595n;
 
-    const forthDecimal = 8;
-    const forthInitailPrice = 339925673n;
+    const eurDecimal = 8;
+    const eurInitailPrice = 339925673n;
 
     const ghoPriceFeeds = await viem.deployContract("MockV3Aggregator", [ghoDecimal, ghoInitailPrice])
 
@@ -29,14 +29,14 @@ export async function deployPriceAggregator() {
 
     const ethPriceFeeds = await viem.deployContract("MockV3Aggregator", [ethDecimal, ethInitailPrice])
 
-    const linkPriceFeeds = await viem.deployContract("MockV3Aggregator", [linkDecimal, linkInitailPrice])
+    const xauPriceFeeds = await viem.deployContract("MockV3Aggregator", [xauDecimal, xauInitailPrice])
 
-    const forthPriceFeeds = await viem.deployContract("MockV3Aggregator", [forthDecimal, forthInitailPrice])
+    const eurPriceFeeds = await viem.deployContract("MockV3Aggregator", [eurDecimal, eurInitailPrice])
 
     return { 
-        ghoPriceFeeds, btcPriceFeeds, ethPriceFeeds, linkPriceFeeds, forthPriceFeeds, 
+        ghoPriceFeeds, btcPriceFeeds, ethPriceFeeds, xauPriceFeeds, eurPriceFeeds, 
         ghoDecimal, ghoInitailPrice, btcDecimal, btcInitailPrice, ethDecimal, 
-        ethInitailPrice, linkInitailPrice, linkDecimal, forthInitailPrice, forthDecimal  
+        ethInitailPrice, xauInitailPrice, xauDecimal, eurInitailPrice, eurDecimal  
     }
 
 }

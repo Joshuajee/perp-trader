@@ -2,7 +2,7 @@ import { time } from "@nomicfoundation/hardhat-network-helpers";
 import { viem } from "hardhat";
 
 const randomChange = (price: bigint) => {
-  return BigInt(Math.floor(Math.random() * Number(price * 2n)))
+  return BigInt(Math.floor(Number(price) + Math.random() * Number(price * 2n)))
 }
 
 async function main() {

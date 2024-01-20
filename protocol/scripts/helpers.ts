@@ -38,5 +38,9 @@ export const tokenSymbols = () => {
 
     const forth = "forth"
 
-    return { ghoToken, btc, eth, link, forth }
+    const eur = "eur"
+
+    const xau = "xau"
+
+    return { ghoToken, btc, eth, link, forth, eur, xau }
 }
