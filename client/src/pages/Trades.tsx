@@ -3,7 +3,9 @@ import { LuCandlestickChart } from "react-icons/lu";
 import { useAccount, useContractRead } from "wagmi";
 import useCurrentChainId from "@hooks/useCurrentChainId";
 import { formatEther } from "viem";
-import { publicClient } from "@utils/helpers";
+import { publicClient, walletClient } from "@utils/helpers";
+import { useState } from "react";
+import { Oval } from "react-loader-spinner";
 
 interface ITrades {
     collateral: bigint,
@@ -17,6 +19,7 @@ interface ITrades {
 function Trades() {
     const { address } = useAccount();
     const currentChainId = useCurrentChainId()
+    const [isLoading, setIsLoading] = useState<boolean>(false)
 
     //@ts-ignore
     const { data: tradersInfo }: { data: ITrades[] } = useContractRead({
@@ -28,6 +31,7 @@ function Trades() {
     })
 
     const liquidate = async (trader: string) => {
+        console.log(trader)
         const { request } = await publicClient.simulateContract({
             address: `0x${import.meta.env.VITE_PERP_TRADER_ADDRESS.substring(2)}`,
             abi: perpAbi,
@@ -39,6 +43,7 @@ function Trades() {
         const hash = await walletClient.writeContract(request)
         console.log(hash, "transaction completed")
     }
+
 
     return (
         <div className="mt-10 gap-10 px-10">
@@ -58,12 +63,14 @@ function Trades() {
                         <div key={idx} className="flex items-center border-t border-primary_2 h-10">
 
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{Number(formatEther(trades.collateral)).toFixed(2)}</div>
-                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center ">{String(formatEther(trades.pnl))}</div>
+                            <div className={`w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center ${Number(formatEther(trades.pnl)) > 0 ? "text-green-500" : "text-red-500"}`}>{Number(formatEther(trades.pnl)).toFixed(2)}</div>
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{String(trades.usedLeverage)} x</div>
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{String(trades.maxLeverage)} x</div>
                             <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center">{Number(formatEther(trades.liquidationFee)).toFixed(2)} GHO</div>
 
-                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center"><button disabled={Number(formatEther(trades.liquidationFee)) > 0 ? false : true} onClick={() => { liquidate(trades.trader) }} className=" w-fit px-3 py-2 flex items-center text-xs  bg-red-600 text-white  ">Liquidate</button></div>
+                            <div className="w-[16.66%]  h-full font-semibold text-sm flex items-center justify-center"><button disabled={Number(formatEther(trades.liquidationFee)) > 0 && !isLoading ? false : true} onClick={() => liquidate(trades.trader)} className={`w-fit px-3 py-2 flex items-center text-xs ${Number(formatEther(trades.liquidationFee)) > 0 ? "bg-red-600" : ""}  text-white  `}>
+                                {!isLoading && <span className=" text-white">Liquidate </span>} <Oval visible={isLoading} height={20} color='#fff' secondaryColor='#000' />
+                            </button></div>
 
                         </div>
                     ))) : (

@@ -95,6 +95,7 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
 
 
     const openPosition = async (position: boolean) => {
+        console.log(formData.pair)
 
         if (!formData.sizeAmount || !formData.pair.baseCurrency) return
         if (position) {
@@ -114,12 +115,12 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
 
         //@ts-ignore
         const hash = await walletClient.writeContract(request)
-        //reset form
+        //reset form leaving pair
         form.current && form.current.reset()
         setFormData({
             pair: {
-                baseCurrency: "",
-                quoteCurrency: ""
+                baseCurrency: formData.pair.baseCurrency,
+                quoteCurrency: formData.pair.quoteCurrency
             },
             sizeAmount: null,
             collateralAmount: 0,
@@ -131,6 +132,7 @@ export function MakePosition({ authPair, setAuthPair }: { authPair: number, setA
         } else {
             setIsLoadingShort(false)
         }
+
     }
 
     useEffect(() => {

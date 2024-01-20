@@ -63,7 +63,7 @@ function Dashboard() {
                             </button>
                             <button onClick={() => setTab(1)} className={` ${tab === 1 ? "bg-primary_3" : "bg-transparent"} hover:bg-primary_3 hover:text-white
                          font-semibold text-sm h-full  flex items-center justify-center w-1/2 space-x-3`}>
-                                <TbPigMoney size={18} /> <span>Deposit</span>
+                                <TbPigMoney size={18} /> <span>Collateral</span>
                             </button>
                         </div>
                         <Balances />
