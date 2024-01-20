@@ -7,10 +7,11 @@ import Vault from "@pages/Vault";
 import Dashboard from "@pages/Dashboard";
 import Trades from "@pages/Trades";
 import { localhost, sepolia } from "wagmi/chains";
+import logo from "@assets/images/logo.png"
 
 
 // Choose which chains you'd like to show
-const chains = [localhost, sepolia];
+const chains = [sepolia, localhost];
 
 
 const config = createConfig(
@@ -19,13 +20,14 @@ const config = createConfig(
     infuraId: import.meta.env.VITE_INFURA_ID, // or infuraId
     walletConnectProjectId: `${import.meta.env.VITE_WALLETCONNECT_PROJECT_ID}`,
     chains,
+
     // Required
-    appName: "Your App Name",
+    appName: "PERP-GHO",
 
     // Optional
     appDescription: "A perpetuals trading platform",
-    appUrl: "https://family.co", // your app's url
-    appIcon: "https://family.co/logo.png", // your app's icon, no bigger than 1024x1024px (max. 1MB)
+    appUrl: "https://perp-trader.netlify.app", // your app's url
+    appIcon: logo, // your app's icon, no bigger than 1024x1024px (max. 1MB)
   }),
 );
 
