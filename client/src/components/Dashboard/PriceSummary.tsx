@@ -3,7 +3,6 @@ import { FaChevronDown } from "react-icons/fa";
 import { useContractRead } from "wagmi";
 import perpAbi from "@abis/contracts/PerpTrades.sol/PerpTrades.json"
 import { publicClient } from "@utils/helpers";
-import { ethers } from "ethers";
 import { formatEther } from "viem";
 
 

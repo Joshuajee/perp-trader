@@ -7,7 +7,7 @@ import useCurrentChainId from "@hooks/useCurrentChainId"
 import { ContractFunctionExecutionError, InsufficientFundsError, parseEther } from 'viem';
 import { Oval } from 'react-loader-spinner';
 import CustomConnectButton from '@components/Shared/CustomConnectButton';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 
 
 interface FormData {
