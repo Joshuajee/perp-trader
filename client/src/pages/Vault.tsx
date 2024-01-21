@@ -103,7 +103,7 @@ export default function Vault() {
             //@ts-ignore
             const hash = await walletClient.writeContract(request)
             await publicClient.waitForTransactionReceipt(
-                { hash: hash }
+                { hash }
             )
         } catch (error) {
             if (error instanceof ContractFunctionExecutionError) {
@@ -138,7 +138,7 @@ export default function Vault() {
             //@ts-ignore
             const hash = await walletClient.writeContract(request)
             await publicClient.waitForTransactionReceipt(
-                { hash: hash }
+                { hash }
             )
         } catch (error) {
             if (error instanceof ContractFunctionExecutionError) {
