@@ -102,9 +102,9 @@ export default function Vault() {
             })
             //@ts-ignore
             const hash = await walletClient.writeContract(request)
-            await publicClient.waitForTransactionReceipt(
-                { hash }
-            )
+            // await publicClient.waitForTransactionReceipt(
+            //     { hash }
+            // )
         } catch (error) {
             if (error instanceof ContractFunctionExecutionError) {
                 toast.error(error.shortMessage);
