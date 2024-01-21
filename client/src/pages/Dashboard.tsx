@@ -57,11 +57,11 @@ function Dashboard() {
                 <div className="w-[30%] h-fit">
                     <div className="w-full bg-primary_4 rounded-md py-5 px-4  flex flex-col gap-3">
                         <div className="m-auto h-10 w-full bg-primary_5 flex">
-                            <button onClick={() => setTab(1)} className={` ${tab === 1 ? "bg-primary_3" : "bg-transparent"} hover:bg-primary_3 hover:text-white
+                            <button onClick={() => setTab(0)} className={` ${tab === 0 ? "bg-primary_3" : "bg-transparent"} hover:bg-primary_3 hover:text-white
                          font-semibold text-sm h-full  flex items-center justify-center w-1/2 space-x-3`}>
                                 <TbPigMoney size={18} /> <span>Collateral</span>
                             </button>
-                            <button onClick={() => setTab(0)} className={` ${tab === 0 ? "bg-primary_3" : "bg-transparent"} hover:bg-primary_3 hover:text-white
+                            <button onClick={() => setTab(1)} className={` ${tab === 1 ? "bg-primary_3" : "bg-transparent"} hover:bg-primary_3 hover:text-white
                          font-semibold text-sm h-full  flex items-center justify-center w-1/2 space-x-3`}>
                                 <GoGraph size={20} /> <span>Trade</span>
                             </button>
@@ -69,8 +69,8 @@ function Dashboard() {
                         </div>
                         <Balances />
                         <div>
-                            {tab === 0 && <MakePosition authPair={authPair} setAuthPair={setAuthPair} />}
-                            {tab === 1 && <DepositCollateral />}
+                            {tab === 0 && <DepositCollateral />}
+                            {tab === 1 && <MakePosition authPair={authPair} setAuthPair={setAuthPair} />}
                         </div>
 
                         <div className="">

@@ -139,6 +139,11 @@ export function PriceSummary({ authPair, setAuthPair }: { authPair: number, setA
                 <p className="font-semibold text-white text-xl w-[70%] text-center">{pairsData[pair].baseCurrency.toUpperCase()}/{pairsData[pair].quoteCurrency.toUpperCase()}</p>
                 <FaChevronDown size={18} className="text-white cursor-pointer pt-1" onClick={() => setDrop(!drop)} />
             </div>}
+            {!pairsData && <div className="h-full w-[20%] flex items-center p-3 space-x-3 ">
+
+                <p className="font-semibold text-white text-xl w-[70%] text-center">BTC/ETH</p>
+
+            </div>}
             <div className="h-full w-[15%] flex flex-col justify-center font-semibold">
                 <p className="text-white text-md"> Price Ratio</p>
                 <p className=" text-sm">{pairPrice ? pairPrice : ""}</p>
