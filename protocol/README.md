@@ -12,4 +12,4 @@ npx hardhat node
 npx hardhat run scripts/deploy.ts
 ```
 
-PerpTrader:  0xdc7e8500c6550a2590a0cf3baa3609b117b415c6
+PerpTrader:  0x95dbae969acec3b2184461a0ecd51fb6f1c42bc0
