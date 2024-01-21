@@ -46,7 +46,7 @@ const config: HardhatUserConfig = {
     },
     sepolia: {
       url: "https://sepolia.drpc.org",
-      //accounts: [ PRIVATE_KEY ]
+      accounts: [ PRIVATE_KEY ]
     },
   },
 };

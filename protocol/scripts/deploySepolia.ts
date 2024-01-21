@@ -42,9 +42,7 @@ async function main() {
 
   console.log("-------------------------------------------------------------------")
 
-  const perpTrader = await viem.deployContract("PerpTrades", [gho, ghoPriceFeeds, "aGho", "aGho"])
-
-  console.log("Perp Trader ", perpTrader.address)
+  const perpTrader = await viem.deployContract("PerpTrades", [gho, ghoPriceFeeds, "Perp-gho", "Perp-gho"])
   
   //const { perpTrader } = await deploy(gho, ghoPriceFeeds)
 
