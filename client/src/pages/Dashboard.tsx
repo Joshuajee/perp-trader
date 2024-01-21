@@ -8,6 +8,24 @@ import { useAccount, useContractRead } from "wagmi";
 import useCurrentChainId from "@hooks/useCurrentChainId";
 
 
+interface IPosition {
+    positionId: bigint,
+    pnl: bigint,
+    position: {
+        isLong: boolean,
+        isOpen: boolean,
+        openedAt: number,
+        pair: {
+            baseCurrency: string,
+            quoteCurrency: string,
+        },
+        size: bigint,
+        trader: string,
+        value: number
+    }
+}
+
+
 function Dashboard() {
     const [tab, setTab] = useState<number>(0)
     const { address } = useAccount();
@@ -37,6 +55,16 @@ function Dashboard() {
         address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
         abi: perpAbi,
         functionName: "interestRate",
+        watch: true,
+        chainId: currentChainId
+    })
+
+    // @ts-ignore
+    const { data: traderPositions }: { data: IPosition[] } = useContractRead({
+        address: import.meta.env.VITE_PERP_TRADER_ADDRESS,
+        abi: perpAbi,
+        functionName: "getTraderPositions",
+        args: [address],
         watch: true,
         chainId: currentChainId
     })
@@ -76,7 +104,7 @@ function Dashboard() {
                         <div className="">
                             <div className="flex justify-between ">
                                 <p className="text-md">Leverage</p>
-                                <p className="text-nd text-white">{leverage ? Number(leverage) + "x" : ""}</p>
+                                <p className="text-nd text-white">{leverage && traderPositions && traderPositions.length > 0 ? Number(leverage) + "x" : ""}</p>
                             </div>
                             <div className="flex justify-between  gap-2">
                                 <p className="text-md">Max Leverage</p>
